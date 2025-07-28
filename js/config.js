@@ -67,7 +67,7 @@ const APP_CONFIG = {
     
     // User roles
     roles: {
-        Admin: 'Admin', // Admin Level - Full Access
+        Admin: 'ACPD', // ACPD Level - Full Access
         Viewer: 'Viewer' // Read-only access
     }
 };
