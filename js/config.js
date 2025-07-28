@@ -12,6 +12,8 @@ let supabaseClient;
 function initializeSupabase() {
     if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey) {
         console.error('Supabase credentials missing. Define SUPABASE_URL and SUPABASE_ANON_KEY in js/env.js');
+        console.log('Current config:', SUPABASE_CONFIG);
+        console.log('window.env:', window.env);
         return false;
     }
     console.log('Attempting to initialize Supabase...');
@@ -34,15 +36,30 @@ function initializeSupabase() {
 }
 
 // Try to initialize immediately
+console.log('Initial Supabase initialization attempt...');
 if (!initializeSupabase()) {
     // If immediate initialization fails, wait for the library
     console.log('Retrying Supabase initialization...');
-    setTimeout(() => {
-        if (!initializeSupabase()) {
-            console.log('Second retry...');
-            setTimeout(initializeSupabase, 500);
+    let retryCount = 0;
+    const maxRetries = 10;
+    
+    const retryInit = () => {
+        retryCount++;
+        console.log(`Retry attempt ${retryCount}/${maxRetries}`);
+        
+        if (initializeSupabase()) {
+            console.log('Supabase initialized successfully on retry!');
+            return;
         }
-    }, 100);
+        
+        if (retryCount < maxRetries) {
+            setTimeout(retryInit, 200);
+        } else {
+            console.error('Failed to initialize Supabase after', maxRetries, 'attempts');
+        }
+    };
+    
+    setTimeout(retryInit, 100);
 }
 
 // App Configuration
