@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Update CCB Links - RADIUS v2.0</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="/js/config.js?v=2"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007cba;
+            color: white;
+            border: none;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #005a8a;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .results {
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #f8f9fa;
+            border-radius: 5px;
+            border-left: 4px solid #007cba;
+        }
+        .error {
+            border-left-color: #dc3545;
+            background-color: #f8d7da;
+        }
+        .success {
+            border-left-color: #28a745;
+            background-color: #d4edda;
+        }
+        .leader-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #eee;
+        }
+        .leader-item:last-child {
+            border-bottom: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Update CCB Profile Links</h1>
+        
+        <div class="form-group">
+            <label for="authEmail">Admin Email:</label>
+            <input type="email" id="authEmail" placeholder="Enter your admin email" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="authPassword">Password:</label>
+            <input type="password" id="authPassword" placeholder="Enter your password" required>
+        </div>
+        
+        <div class="form-group">
+            <label for="linkTemplate">CCB Link Template:</label>
+            <input type="text" id="linkTemplate" 
+                   value="https://valleycreekchurch.ccbchurch.com/goto/groups/{CCB_LINK}/events"
+                   placeholder="Use {CCB_LINK} as placeholder for existing CCB profile link">
+            <small style="color: #666;">The {CCB_LINK} will be replaced with each Circle Leader's existing CCB profile link value.</small>
+        </div>
+        
+        <button id="loadLeadersBtn" onclick="loadCircleLeaders()">Load Circle Leaders</button>
+        <button id="updateLinksBtn" onclick="updateAllLinks()" style="display: none;">Update All CCB Links</button>
+        
+        <!-- Debug Info -->
+        <div style="margin-top: 10px; padding: 10px; background: #f0f0f0; border-radius: 5px; font-size: 12px; color: #666;">
+            <strong>Debug Info:</strong><br>
+            Supabase Library: <span id="supabaseStatus">Loading...</span><br>
+            Config: <span id="configStatus">Loading...</span><br>
+            Client: <span id="clientStatus">Not initialized</span>
+        </div>
+        
+        <div id="results"></div>
+    </div>
+
+    <script>
+        let ccbSupabaseClient;
+        let circleLeaders = [];
+        
+        // Initialize Supabase using the same pattern as the main app
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Update debug status
+            function updateDebugStatus() {
+                document.getElementById('supabaseStatus').textContent = typeof supabase !== 'undefined' ? 'Loaded' : 'Not loaded';
+                document.getElementById('configStatus').textContent = typeof SUPABASE_CONFIG !== 'undefined' ? 'Loaded' : 'Not loaded';
+                document.getElementById('clientStatus').textContent = ccbSupabaseClient ? 'Initialized' : 'Not initialized';
+            }
+            
+            updateDebugStatus();
+            
+            // Wait for both Supabase library and config to load
+            let attempts = 0;
+            const maxAttempts = 20;
+            
+            async function waitForSupabase() {
+                while (attempts < maxAttempts) {
+                    updateDebugStatus();
+                    
+                    // Check if the main app has already initialized Supabase
+                    if (window.supabase && typeof window.supabase.auth !== 'undefined') {
+                        ccbSupabaseClient = window.supabase;
+                        updateDebugStatus();
+                        console.log('Using existing Supabase client from main app');
+                        showResults('Supabase connection ready. Enter your credentials to continue.', 'success');
+                        return true;
+                    }
+                    
+                    // Try to initialize our own client
+                    if (typeof supabase !== 'undefined' && typeof SUPABASE_CONFIG !== 'undefined') {
+                        try {
+                            // Try different ways to access createClient
+                            let createClient;
+                            if (typeof supabase.createClient === 'function') {
+                                createClient = supabase.createClient;
+                            } else if (typeof window.supabase?.createClient === 'function') {
+                                createClient = window.supabase.createClient;
+                            } else if (typeof supabase.default?.createClient === 'function') {
+                                createClient = supabase.default.createClient;
+                            } else {
+                                throw new Error('Could not find createClient function');
+                            }
+                            
+                            ccbSupabaseClient = createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
+                            updateDebugStatus();
+                            console.log('CCB tool Supabase initialized successfully');
+                            showResults('Supabase connection ready. Enter your credentials to continue.', 'success');
+                            return true;
+                        } catch (error) {
+                            console.error('Error initializing Supabase:', error);
+                            // Don't return false yet, keep trying
+                        }
+                    }
+                    
+                    attempts++;
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                }
+                updateDebugStatus();
+                showResults('Error: Could not load Supabase or configuration. Please refresh the page.', 'error');
+                return false;
+            }
+            
+            await waitForSupabase();
+        });
+        
+        // Make functions globally accessible
+        window.loadCircleLeaders = async function() {
+            const email = document.getElementById('authEmail').value;
+            const password = document.getElementById('authPassword').value;
+            
+            if (!email || !password) {
+                showResults('Please enter email and password', 'error');
+                return;
+            }
+            
+            if (!ccbSupabaseClient) {
+                showResults('Error: Supabase not initialized. Please refresh the page.', 'error');
+                return;
+            }
+            
+            try {
+                showResults('Signing in...', 'success');
+                
+                // Sign in
+                const { data: authData, error: authError } = await ccbSupabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+                
+                if (authError) throw authError;
+                
+                showResults('Authenticated successfully. Loading Circle Leaders...', 'success');
+                
+                // Load Circle Leaders
+                const { data: leaders, error: leadersError } = await ccbSupabaseClient
+                    .from('circle_leaders')
+                    .select('id, name, ccb_profile_link')
+                    .order('name');
+                
+                if (leadersError) throw leadersError;
+                
+                circleLeaders = leaders || [];
+                displayCircleLeaders();
+                
+            } catch (error) {
+                console.error('Error:', error);
+                showResults(`Error: ${error.message}`, 'error');
+            }
+        };
+        
+        function displayCircleLeaders() {
+            const template = document.getElementById('linkTemplate').value;
+            
+            let html = `<h3>Circle Leaders (${circleLeaders.length} found)</h3>`;
+            html += '<div style="max-height: 400px; overflow-y: auto; border: 1px solid #ddd; border-radius: 5px;">';
+            
+            circleLeaders.forEach(leader => {
+                const currentLink = leader.ccb_profile_link || 'No current link';
+                
+                // Extract group ID from existing CCB link, or use UUID as fallback
+                let groupId = leader.id; // Default to UUID
+                if (leader.ccb_profile_link) {
+                    // Try to extract group ID from existing URL
+                    const match = leader.ccb_profile_link.match(/\/groups\/([^\/]+)/);
+                    if (match) {
+                        groupId = match[1];
+                    }
+                }
+                
+                const newLink = template.replace('{CCB_LINK}', groupId);
+                
+                html += `
+                    <div class="leader-item">
+                        <div>
+                            <strong>${leader.name}</strong><br>
+                            <small style="color: #666;">Current: ${currentLink}</small><br>
+                            <small style="color: #007cba;">Group ID: ${groupId}</small><br>
+                            <small style="color: #28a745;">New: ${newLink}</small>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += '</div>';
+            
+            showResults(html, 'success');
+            document.getElementById('updateLinksBtn').style.display = 'block';
+        }
+        
+        window.updateAllLinks = async function() {
+            const template = document.getElementById('linkTemplate').value;
+            
+            if (!template.includes('{CCB_LINK}')) {
+                showResults('Error: Link template must include {CCB_LINK} placeholder', 'error');
+                return;
+            }
+            
+            let successCount = 0;
+            let errorCount = 0;
+            
+            showResults('Updating CCB links...', 'success');
+            
+            for (const leader of circleLeaders) {
+                try {
+                    // Extract group ID from existing CCB link, or use UUID as fallback
+                    let groupId = leader.id; // Default to UUID
+                    if (leader.ccb_profile_link) {
+                        // Try to extract group ID from existing URL
+                        const match = leader.ccb_profile_link.match(/\/groups\/([^\/]+)/);
+                        if (match) {
+                            groupId = match[1];
+                        }
+                    }
+                    
+                    const newLink = template.replace('{CCB_LINK}', groupId);
+                    
+                    const { error } = await ccbSupabaseClient
+                        .from('circle_leaders')
+                        .update({ 
+                            ccb_profile_link: newLink,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', leader.id);
+                    
+                    if (error) throw error;
+                    successCount++;
+                    
+                } catch (error) {
+                    console.error(`Error updating ${leader.name}:`, error);
+                    errorCount++;
+                }
+            }
+            
+            const resultMessage = `
+                <h3>Update Complete</h3>
+                <p><strong>Successfully updated:</strong> ${successCount} Circle Leaders</p>
+                ${errorCount > 0 ? `<p><strong>Errors:</strong> ${errorCount} Circle Leaders</p>` : ''}
+                <p>All Circle Leaders now have CCB links in the format:</p>
+                <code>${template.replace('{CCB_LINK}', '[GROUP_ID]')}</code>
+                <br><br>
+                <small><strong>Note:</strong> The tool extracted group IDs from existing CCB links where possible, with UUID fallback for Circle Leaders without existing links.</small>
+            `;
+            
+            showResults(resultMessage, successCount > 0 ? 'success' : 'error');
+            
+            // Reload to show updated links
+            if (successCount > 0) {
+                setTimeout(() => {
+                    window.loadCircleLeaders();
+                }, 2000);
+            }
+        };
+        
+        function showResults(message, type = 'success') {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = message;
+            resultsDiv.className = `results ${type}`;
+        }
+    </script>
+</body>
+</html>

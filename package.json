@@ -1,0 +1,28 @@
+{
+  "name": "radius-circle-tracker",
+  "version": "1.0.0",
+  "description": "Progressive Web App for tracking Circle Leader interactions at Valley Creek Church",
+  "main": "index.html",
+  "scripts": {
+    "start": "python -m http.server 8000",
+    "serve": "npx serve .",
+    "dev": "python -m http.server 8000"
+  },
+  "keywords": [
+    "pwa",
+    "circle-leaders",
+    "church",
+    "tracking",
+    "supabase",
+    "vanilla-javascript"
+  ],
+  "author": "Trip Ochenski",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/your-org/radius-circle-tracker.git"
+  },
+  "homepage": "https://radius.valleycreek.org",
+  "dependencies": {},
+  "devDependencies": {}
+}

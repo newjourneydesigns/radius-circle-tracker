@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Supabase Test</title>
+</head>
+<body>
+    <h1>Supabase Connection Test</h1>
+    <div id="status">Loading...</div>
+    <div id="user-creation" style="margin-top: 20px;">
+        <h2>Create Test Users</h2>
+        <button id="create-users-btn" onclick="createTestUsers()" disabled>Create Test Users</button>
+        <div id="user-status" style="margin-top: 10px;"></div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+    <script>
+        console.log('1. Supabase library type:', typeof supabase);
+        
+        if (typeof supabase !== 'undefined') {
+            console.log('2. Supabase object:', supabase);
+            
+            const SUPABASE_URL = 'https://eruboulvrgrodccmjjbe.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydWJvdWx2cmdyb2RjY21qamJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwOTMzOTUsImV4cCI6MjA2ODY2OTM5NX0.FJ0nu1Ov8jbAdZy8SX9qs2gJ60_qdROsIkwRg8k9GK0';
+            
+            try {
+                const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('3. Client created:', client);
+                
+                window.supabaseClient = client;
+                
+                // Test connection
+                client.auth.getSession().then(result => {
+                    console.log('4. Session test:', result);
+                    document.getElementById('status').innerHTML = 'Supabase connected successfully!';
+                    document.getElementById('create-users-btn').disabled = false;
+                }).catch(error => {
+                    console.error('5. Session error:', error);
+                    document.getElementById('status').innerHTML = 'Connection error: ' + error.message;
+                });
+                
+            } catch (error) {
+                console.error('3. Client creation error:', error);
+                document.getElementById('status').innerHTML = 'Client creation failed: ' + error.message;
+            }
+        } else {
+            console.error('2. Supabase library not loaded');
+            document.getElementById('status').innerHTML = 'Supabase library failed to load';
+        }
+        
+        // Function to create test users
+        async function createTestUsers() {
+            const userStatus = document.getElementById('user-status');
+            userStatus.innerHTML = 'Creating test users...';
+            
+            try {
+                console.log('Creating Admin user...');
+                const adminResult = await window.supabaseClient.auth.signUp({
+                    email: 'your-email+admin@gmail.com', // Replace with your actual email
+                    password: 'AdminPass123!',
+                    options: {
+                        data: {
+                            full_name: 'John Admin',
+                            role: 'ACD'
+                        }
+                    }
+                });
+                
+                console.log('Admin creation result:', adminResult);
+                
+                console.log('Creating Viewer user...');
+                const viewerResult = await window.supabaseClient.auth.signUp({
+                    email: 'your-email+viewer@gmail.com', // Replace with your actual email
+                    password: 'ViewerPass123!',
+                    options: {
+                        data: {
+                            full_name: 'Jane Viewer',
+                            role: 'Viewer'
+                        }
+                    }
+                });
+                
+                console.log('Viewer creation result:', viewerResult);
+                
+                let statusMessage = '<h3>Test Users Created!</h3>';
+                
+                if (adminResult.data.user) {
+                    statusMessage += '<p>✅ <strong>Admin User:</strong><br>';
+                    statusMessage += 'Email: admin@valleycreek.org<br>';
+                    statusMessage += 'Password: AdminPass123!</p>';
+                } else {
+                    statusMessage += '<p>❌ Admin user creation failed: ' + (adminResult.error?.message || 'Unknown error') + '</p>';
+                }
+                
+                if (viewerResult.data.user) {
+                    statusMessage += '<p>✅ <strong>Viewer User:</strong><br>';
+                    statusMessage += 'Email: viewer@valleycreek.org<br>';
+                    statusMessage += 'Password: ViewerPass123!</p>';
+                } else {
+                    statusMessage += '<p>❌ Viewer user creation failed: ' + (viewerResult.error?.message || 'Unknown error') + '</p>';
+                }
+                
+                statusMessage += '<p><strong>Note:</strong> You may need to check your email to confirm these accounts before you can log in.</p>';
+                
+                userStatus.innerHTML = statusMessage;
+                
+            } catch (error) {
+                console.error('Error creating users:', error);
+                userStatus.innerHTML = '<p>❌ Error creating users: ' + error.message + '</p>';
+            }
+        }
+
+        // Function to manually confirm email for a user
+        async function confirmEmail(userId) {
+            const userStatus = document.getElementById('user-status');
+            userStatus.innerHTML = 'Confirming email...';
+
+            try {
+                const { data, error } = await window.supabaseClient
+                    .from('users') // Replace 'users' with your actual table name
+                    .update({ email_confirmed_at: new Date().toISOString() })
+                    .eq('id', userId); // Replace 'id' with the actual column name for user ID
+
+                if (error) {
+                    console.error('Error confirming email:', error);
+                    userStatus.innerHTML = '<p>❌ Error confirming email: ' + error.message + '</p>';
+                } else {
+                    console.log('Email confirmed successfully:', data);
+                    userStatus.innerHTML = '<p>✅ Email confirmed successfully for user ID: ' + userId + '</p>';
+                }
+            } catch (err) {
+                console.error('Unexpected error:', err);
+                userStatus.innerHTML = '<p>❌ Unexpected error: ' + err.message + '</p>';
+            }
+        }
+    </script>
+</body>
+</html>

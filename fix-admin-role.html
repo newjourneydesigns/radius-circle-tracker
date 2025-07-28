@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Fix Admin Role</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Fix Admin Role</h1>
+    <div id="output"></div>
+    
+    <script>
+        const supabaseClient = supabase.createClient(
+            'https://eruboulvrgrodccmjjbe.supabase.co', 
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydWJvdWx2cmdyb2RjY21qamJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwOTMzOTUsImV4cCI6MjA2ODY2OTM5NX0.FJ0nu1Ov8jbAdZy8SX9qs2gJ60_qdROsIkwRg8k9GK0'
+        );
+
+        async function checkAndFixAdminRole() {
+            const output = document.getElementById('output');
+            
+            try {
+                // Check current users
+                const { data: users, error: selectError } = await supabaseClient
+                    .from('users')
+                    .select('*');
+                
+                if (selectError) {
+                    output.innerHTML += `<p>Error fetching users: ${selectError.message}</p>`;
+                    return;
+                }
+                
+                output.innerHTML += `<h2>Current Users:</h2>`;
+                users.forEach(user => {
+                    output.innerHTML += `<p>Email: ${user.email}, Role: ${user.role}, Name: ${user.name}</p>`;
+                });
+                
+                // Check if admin@valleycreek.org exists
+                const adminUser = users.find(u => u.email === 'admin@valleycreek.org');
+                
+                if (adminUser) {
+                    if (adminUser.role !== 'Admin') {
+                        output.innerHTML += `<p>Updating admin user role from "${adminUser.role}" to "Admin"...</p>`;
+                        
+                        const { data: updateData, error: updateError } = await supabaseClient
+                            .from('users')
+                            .update({ role: 'Admin' })
+                            .eq('email', 'admin@valleycreek.org')
+                            .select();
+                        
+                        if (updateError) {
+                            output.innerHTML += `<p>Error updating role: ${updateError.message}</p>`;
+                        } else {
+                            output.innerHTML += `<p>✅ Successfully updated admin role!</p>`;
+                            output.innerHTML += `<p>Updated user: ${JSON.stringify(updateData[0])}</p>`;
+                        }
+                    } else {
+                        output.innerHTML += `<p>✅ Admin user already has correct role!</p>`;
+                    }
+                } else {
+                    output.innerHTML += `<p>Admin user not found, creating...</p>`;
+                    
+                    const { data: createData, error: createError } = await supabaseClient
+                        .from('users')
+                        .insert([{
+                            email: 'admin@valleycreek.org',
+                            name: 'Admin User',
+                            role: 'Admin',
+                            campus: 'Main Campus',
+                            acpd: null
+                        }])
+                        .select();
+                    
+                    if (createError) {
+                        output.innerHTML += `<p>Error creating admin user: ${createError.message}</p>`;
+                    } else {
+                        output.innerHTML += `<p>✅ Successfully created admin user!</p>`;
+                        output.innerHTML += `<p>Created user: ${JSON.stringify(createData[0])}</p>`;
+                    }
+                }
+                
+            } catch (error) {
+                output.innerHTML += `<p>Error: ${error.message}</p>`;
+            }
+        }
+
+        // Run the check
+        checkAndFixAdminRole();
+    </script>
+</body>
+</html>

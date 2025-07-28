@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Database Schema Check</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <h1>Database Schema Check</h1>
+    <div id="output"></div>
+    
+    <script>
+        const supabaseClient = supabase.createClient(
+            'https://eruboulvrgrodccmjjbe.supabase.co', 
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydWJvdWx2cmdyb2RjY21qamJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwOTMzOTUsImV4cCI6MjA2ODY2OTM5NX0.FJ0nu1Ov8jbAdZy8SX9qs2gJ60_qdROsIkwRg8k9GK0'
+        );
+
+        async function checkDatabase() {
+            const output = document.getElementById('output');
+            
+            // Check users table
+            try {
+                output.innerHTML += `<h2>Checking users table...</h2>`;
+                const { data: users, error: userError } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .limit(5);
+                
+                if (userError) {
+                    output.innerHTML += `<p style="color: red;">Users table error: ${userError.message}</p>`;
+                } else {
+                    output.innerHTML += `<p style="color: green;">✅ Users table accessible (${users.length} records)</p>`;
+                    if (users.length > 0) {
+                        output.innerHTML += `<p>Sample user: ${JSON.stringify(users[0])}</p>`;
+                    }
+                }
+            } catch (e) {
+                output.innerHTML += `<p style="color: red;">Users table exception: ${e.message}</p>`;
+            }
+
+            // Check circle_leaders table
+            try {
+                output.innerHTML += `<h2>Checking circle_leaders table...</h2>`;
+                const { data: leaders, error: leaderError } = await supabaseClient
+                    .from('circle_leaders')
+                    .select('*')
+                    .limit(5);
+                
+                if (leaderError) {
+                    output.innerHTML += `<p style="color: red;">Circle leaders table error: ${leaderError.message}</p>`;
+                } else {
+                    output.innerHTML += `<p style="color: green;">✅ Circle leaders table accessible (${leaders.length} records)</p>`;
+                    if (leaders.length > 0) {
+                        output.innerHTML += `<p>Sample leader: ${JSON.stringify(leaders[0])}</p>`;
+                    }
+                }
+            } catch (e) {
+                output.innerHTML += `<p style="color: red;">Circle leaders table exception: ${e.message}</p>`;
+            }
+
+            // Check communications table
+            try {
+                output.innerHTML += `<h2>Checking communications table...</h2>`;
+                const { data: comms, error: commError } = await supabaseClient
+                    .from('communications')
+                    .select('*')
+                    .limit(5);
+                
+                if (commError) {
+                    output.innerHTML += `<p style="color: red;">Communications table error: ${commError.message}</p>`;
+                } else {
+                    output.innerHTML += `<p style="color: green;">✅ Communications table accessible (${comms.length} records)</p>`;
+                    if (comms.length > 0) {
+                        output.innerHTML += `<p>Sample communication: ${JSON.stringify(comms[0])}</p>`;
+                    }
+                }
+            } catch (e) {
+                output.innerHTML += `<p style="color: red;">Communications table exception: ${e.message}</p>`;
+            }
+
+            // Check acpd_list table
+            try {
+                output.innerHTML += `<h2>Checking acpd_list table...</h2>`;
+                const { data: acpds, error: acpdError } = await supabaseClient
+                    .from('acpd_list')
+                    .select('*')
+                    .limit(5);
+                
+                if (acpdError) {
+                    output.innerHTML += `<p style="color: red;">ACPD list table error: ${acpdError.message}</p>`;
+                } else {
+                    output.innerHTML += `<p style="color: green;">✅ ACPD list table accessible (${acpds.length} records)</p>`;
+                    if (acpds.length > 0) {
+                        output.innerHTML += `<p>Sample ACPD: ${JSON.stringify(acpds[0])}</p>`;
+                    }
+                }
+            } catch (e) {
+                output.innerHTML += `<p style="color: red;">ACPD list table exception: ${e.message}</p>`;
+            }
+
+            // Check campus_list table
+            try {
+                output.innerHTML += `<h2>Checking campus_list table...</h2>`;
+                const { data: campuses, error: campusError } = await supabaseClient
+                    .from('campus_list')
+                    .select('*')
+                    .limit(5);
+                
+                if (campusError) {
+                    output.innerHTML += `<p style="color: red;">Campus list table error: ${campusError.message}</p>`;
+                } else {
+                    output.innerHTML += `<p style="color: green;">✅ Campus list table accessible (${campuses.length} records)</p>`;
+                    if (campuses.length > 0) {
+                        output.innerHTML += `<p>Sample campus: ${JSON.stringify(campuses[0])}</p>`;
+                    }
+                }
+            } catch (e) {
+                output.innerHTML += `<p style="color: red;">Campus list table exception: ${e.message}</p>`;
+            }
+        }
+
+        // Run the check
+        checkDatabase();
+    </script>
+</body>
+</html>
