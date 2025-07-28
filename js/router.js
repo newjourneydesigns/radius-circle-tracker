@@ -62,6 +62,9 @@ class Router {
                 case '/reports':
                     pageModule = await import('/pages/reports.js');
                     break;
+                case '/import':
+                    pageModule = await import('/pages/excel-import.js');
+                    break;
                 case '/org-settings':
                     pageModule = await import('/pages/org-settings.js');
                     break;
