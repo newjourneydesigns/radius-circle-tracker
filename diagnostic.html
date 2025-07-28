@@ -55,9 +55,13 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
-    <script src="js/env.js"></script>
-    <script src="js/config.js?v=4"></script>
+    <script src="/js/env.js?v=5"></script>
+    <script src="js/config.js?v=5"></script>
     <script>
+        console.log('Diagnostic page loading...');
+        console.log('window.env:', window.env);
+        console.log('typeof supabase:', typeof supabase);
+        
         async function initializePage() {
             // Wait for config to be available
             await new Promise(resolve => {
