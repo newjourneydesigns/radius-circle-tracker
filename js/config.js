@@ -1,8 +1,8 @@
 // Supabase Configuration
-// Replace these with your actual Supabase project credentials
+// Updated with correct project credentials
 const SUPABASE_CONFIG = {
-    url: 'https://eruboulvrgrodccmjjbe.supabase.co', // Replace with your Supabase project URL
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVydWJvdWx2cmdyb2RjY21qamJlIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTMwOTMzOTUsImV4cCI6MjA2ODY2OTM5NX0.FJ0nu1Ov8jbAdZy8SX9qs2gJ60_qdROsIkwRg8k9GK0' // Replace with your Supabase anon key
+    url: 'https://pvjdsfhhcugnrzmibhab.supabase.co',
+    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2amRzZmhoY3VnbnJ6bWliaGFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM3MDQwNjEsImV4cCI6MjA2OTI4MDA2MX0.LXgde3rzdPLmfycDQW2Rf1nJ9qKMUBr2J6Yh1ZGp3Ic'
 };
 
 // Initialize Supabase client
