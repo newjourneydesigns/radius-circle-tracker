@@ -680,7 +680,6 @@ export default class DashboardPage {
                             <input type="checkbox" 
                                    id="event-summary-${leader.id}" 
                                    ${leader.event_summary_received ? 'checked' : ''} 
-                                   onchange="window.dashboard.toggleEventSummary('${leader.id}', this.checked)"
                                    class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                             <label for="event-summary-${leader.id}" class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Event Summary Received
@@ -839,47 +838,6 @@ export default class DashboardPage {
         }
     }
 
-    async toggleEventSummary(leaderId, isChecked) {
-        if (!window.authManager.isAdmin()) return;
-
-        try {
-            // Try alternative update syntax
-            const { data, error } = await supabase
-                .from('circle_leaders')
-                .update({ 
-                    event_summary_received: isChecked,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', leaderId)
-                .select();
-
-            if (error) throw error;
-
-            // Update the leader in our data
-            const leader = this.circleLeaders.find(l => l.id === leaderId);
-            if (leader) {
-                leader.event_summary_received = isChecked;
-            }
-
-            // Update the progress display
-            this.updateEventSummaryProgress();
-
-            window.utils.showNotification(
-                `Event Summary ${isChecked ? 'marked as received' : 'unmarked'}`, 
-                'success'
-            );
-        } catch (error) {
-            console.error('Error updating event summary:', error);
-            window.utils.showNotification('Error updating event summary', 'error');
-            
-            // Revert the checkbox state on error
-            const checkbox = document.getElementById(`event-summary-${leaderId}`);
-            if (checkbox) {
-                checkbox.checked = !isChecked;
-            }
-        }
-    }
-
     async uncheckAllEventSummaries() {
         if (!window.authManager.isAdmin()) return;
 
@@ -1008,10 +966,10 @@ export default class DashboardPage {
         console.log('[Dashboard] Today:', todayName, 'Week of month:', weekOfMonth);
         
         return this.filteredLeaders.filter(leader => {
-            if (!leader.meeting_day || !leader.frequency) return false;
+            if (!leader.day || !leader.frequency) return false;
             
             // Check if meeting day matches today
-            const meetingDay = leader.meeting_day.toLowerCase();
+            const meetingDay = leader.day.toLowerCase();
             if (meetingDay !== todayName) return false;
             
             // Check frequency
