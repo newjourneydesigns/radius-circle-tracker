@@ -28,14 +28,15 @@ class Router {
     }
 
     async loadRoute(path) {
+        console.log('[Router] Loading route:', path);
         // Hide loading spinner initially
         const loading = document.getElementById('loading');
         const app = document.getElementById('app');
 
         // Check authentication for protected routes
         if (path !== '/login' && !window.authManager.isAuthenticated()) {
-            console.log('Authentication check failed, redirecting to login');
-            console.log('Path:', path, 'isAuthenticated:', window.authManager.isAuthenticated());
+            console.log('[Router] Authentication check failed, redirecting to login');
+            console.log('[Router] Path:', path, 'isAuthenticated:', window.authManager.isAuthenticated());
             this.navigate('/login');
             return;
         }
