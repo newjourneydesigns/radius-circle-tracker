@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RADIUS Database Diagnostic</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-gray-900 dark:text-white mb-8">RADIUS Database Diagnostic</h1>
+        
+        <div class="space-y-6">
+            <!-- Authentication Status -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Authentication Status</h2>
+                <div id="authStatus" class="space-y-2">
+                    <p>Loading...</p>
+                </div>
+            </div>
+
+            <!-- User Database Record -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">User Database Record</h2>
+                <div id="userRecord" class="space-y-2">
+                    <p>Loading...</p>
+                </div>
+            </div>
+
+            <!-- Table Structure -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Database Tables</h2>
+                <div id="tableStatus" class="space-y-2">
+                    <p>Loading...</p>
+                </div>
+            </div>
+
+            <!-- Test Operations -->
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow">
+                <h2 class="text-xl font-semibold mb-4 text-gray-900 dark:text-white">Test Operations</h2>
+                <div class="space-y-4">
+                    <button id="testCircleLeaderInsert" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Test Circle Leader Insert
+                    </button>
+                    <button id="testCommunicationQuery" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                        Test Communication Query
+                    </button>
+                    <div id="testResults" class="mt-4 p-4 bg-gray-100 dark:bg-gray-700 rounded">
+                        <p class="text-gray-600 dark:text-gray-300">Test results will appear here...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+    <script src="js/config.js?v=4"></script>
+    <script>
+        let supabaseClient;
+
+        async function initializePage() {
+            // Wait for config to be available
+            await new Promise(resolve => {
+                const checkConfig = () => {
+                    if (window.APP_CONFIG && window.supabase) {
+                        resolve();
+                    } else {
+                        setTimeout(checkConfig, 100);
+                    }
+                };
+                checkConfig();
+            });
+
+            supabaseClient = window.supabase;
+            
+            await checkAuthentication();
+            await checkUserRecord();
+            await checkTableStructure();
+            setupTestButtons();
+        }
+
+        async function checkAuthentication() {
+            const authDiv = document.getElementById('authStatus');
+            
+            try {
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+                
+                if (error) throw error;
+                
+                if (session) {
+                    authDiv.innerHTML = `
+                        <p class="text-green-600">✅ Authenticated</p>
+                        <p><strong>Email:</strong> ${session.user.email}</p>
+                        <p><strong>User ID:</strong> ${session.user.id}</p>
+                        <p><strong>Auth Provider:</strong> ${session.user.app_metadata.provider}</p>
+                    `;
+                } else {
+                    authDiv.innerHTML = `
+                        <p class="text-red-600">❌ Not authenticated</p>
+                        <p>Please log in through the main application first</p>
+                    `;
+                }
+            } catch (error) {
+                authDiv.innerHTML = `
+                    <p class="text-red-600">❌ Authentication error:</p>
+                    <pre class="text-sm bg-red-100 p-2 rounded">${JSON.stringify(error, null, 2)}</pre>
+                `;
+            }
+        }
+
+        async function checkUserRecord() {
+            const userDiv = document.getElementById('userRecord');
+            
+            try {
+                const { data: { session } } = await supabaseClient.auth.getSession();
+                
+                if (!session) {
+                    userDiv.innerHTML = '<p class="text-yellow-600">⚠️ Cannot check user record - not authenticated</p>';
+                    return;
+                }
+
+                const { data: user, error } = await supabaseClient
+                    .from('users')
+                    .select('*')
+                    .eq('email', session.user.email)
+                    .single();
+
+                if (error && error.code === 'PGRST116') {
+                    userDiv.innerHTML = `
+                        <p class="text-yellow-600">⚠️ User record not found in database</p>
+                        <p>Run the fix_database_issues.sql script to create your user record</p>
+                    `;
+                } else if (error) {
+                    userDiv.innerHTML = `
+                        <p class="text-red-600">❌ Error querying user:</p>
+                        <pre class="text-sm bg-red-100 p-2 rounded">${JSON.stringify(error, null, 2)}</pre>
+                    `;
+                } else if (user) {
+                    userDiv.innerHTML = `
+                        <p class="text-green-600">✅ User record found</p>
+                        <pre class="text-sm bg-green-100 p-2 rounded">${JSON.stringify(user, null, 2)}</pre>
+                        <p class="mt-2"><strong>Admin Status:</strong> ${user.role === 'ACPD' ? '✅ ACPD (Admin)' : '👁️ Viewer'}</p>
+                    `;
+                }
+            } catch (error) {
+                userDiv.innerHTML = `
+                    <p class="text-red-600">❌ Error checking user record:</p>
+                    <pre class="text-sm bg-red-100 p-2 rounded">${JSON.stringify(error, null, 2)}</pre>
+                `;
+            }
+        }
+
+        async function checkTableStructure() {
+            const tableDiv = document.getElementById('tableStatus');
+            const tables = ['users', 'circle_leaders', 'communications', 'notes'];
+            let results = [];
+
+            for (const table of tables) {
+                try {
+                    const { data, error } = await supabaseClient
+                        .from(table)
+                        .select('*')
+                        .limit(1);
+
+                    if (error) {
+                        results.push(`❌ ${table}: ${error.message}`);
+                    } else {
+                        results.push(`✅ ${table}: Accessible`);
+                    }
+                } catch (error) {
+                    results.push(`❌ ${table}: ${error.message}`);
+                }
+            }
+
+            tableDiv.innerHTML = results.map(result => `<p>${result}</p>`).join('');
+        }
+
+        function setupTestButtons() {
+            document.getElementById('testCircleLeaderInsert').addEventListener('click', testCircleLeaderInsert);
+            document.getElementById('testCommunicationQuery').addEventListener('click', testCommunicationQuery);
+        }
+
+        async function testCircleLeaderInsert() {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = '<p>Testing Circle Leader insert...</p>';
+
+            try {
+                const testData = {
+                    name: 'Test Leader - ' + new Date().toLocaleString(),
+                    email: 'test@example.com',
+                    phone: '555-1234',
+                    campus: 'Waterloo',
+                    acpd: 'Trip Ochenski',
+                    circle_type: 'Life Group',
+                    day: 'Wednesday',
+                    time: '7:00 PM',
+                    frequency: 'Weekly',
+                    status: 'Active'
+                };
+
+                const { data, error } = await supabaseClient
+                    .from('circle_leaders')
+                    .insert([testData])
+                    .select()
+                    .single();
+
+                if (error) {
+                    resultsDiv.innerHTML = `
+                        <p class="text-red-600">❌ Circle Leader insert failed:</p>
+                        <pre class="text-sm bg-red-100 p-2 rounded">${JSON.stringify(error, null, 2)}</pre>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <p class="text-green-600">✅ Circle Leader insert successful!</p>
+                        <pre class="text-sm bg-green-100 p-2 rounded">${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <p class="text-red-600">❌ Circle Leader insert error:</p>
+                    <pre class="text-sm bg-red-100 p-2 rounded">${JSON.stringify(error, null, 2)}</pre>
+                `;
+            }
+        }
+
+        async function testCommunicationQuery() {
+            const resultsDiv = document.getElementById('testResults');
+            resultsDiv.innerHTML = '<p>Testing Communication query...</p>';
+
+            try {
+                const startDate = new Date();
+                startDate.setDate(1);
+                const startDateString = startDate.toISOString().split('T')[0];
+
+                const { data, error } = await supabaseClient
+                    .from('communications')
+                    .select('*')
+                    .gte('communication_date', startDateString)
+                    .limit(10);
+
+                if (error) {
+                    resultsDiv.innerHTML = `
+                        <p class="text-red-600">❌ Communication query failed:</p>
+                        <pre class="text-sm bg-red-100 p-2 rounded">${JSON.stringify(error, null, 2)}</pre>
+                    `;
+                } else {
+                    resultsDiv.innerHTML = `
+                        <p class="text-green-600">✅ Communication query successful!</p>
+                        <p>Found ${data.length} communications</p>
+                        <pre class="text-sm bg-green-100 p-2 rounded">${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                }
+            } catch (error) {
+                resultsDiv.innerHTML = `
+                    <p class="text-red-600">❌ Communication query error:</p>
+                    <pre class="text-sm bg-red-100 p-2 rounded">${JSON.stringify(error, null, 2)}</pre>
+                `;
+            }
+        }
+
+        // Initialize when page loads
+        document.addEventListener('DOMContentLoaded', initializePage);
+    </script>
+</body>
+</html>
