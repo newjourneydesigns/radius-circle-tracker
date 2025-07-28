@@ -387,6 +387,23 @@ export default class DashboardPage {
                 this.closePhoneModal();
             }
         });
+
+        // Event summary checkbox handler (using event delegation)
+        document.addEventListener('change', (e) => {
+            if (e.target.id && e.target.id.startsWith('event-summary-')) {
+                const leaderId = e.target.id.replace('event-summary-', '');
+                const isChecked = e.target.checked;
+                this.updateEventSummaryStatus(leaderId, isChecked);
+            }
+        });
+
+        // Clear follow-up button handler (using event delegation)
+        document.addEventListener('click', (e) => {
+            if (e.target.dataset.action === 'clear-followup') {
+                const leaderId = e.target.dataset.leaderId;
+                this.clearFollowUp(leaderId);
+            }
+        });
     }
 
     async loadData() {
@@ -736,7 +753,8 @@ export default class DashboardPage {
                             ` : ''}
                         </div>
                         ${hasFollowUp && isAdmin ? `
-                            <button onclick="this.clearFollowUp('${leader.id}')" 
+                            <button data-action="clear-followup" 
+                                    data-leader-id="${leader.id}"
                                     class="text-sm bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700">
                                 Clear Follow-up
                             </button>
@@ -767,6 +785,56 @@ export default class DashboardPage {
         } catch (error) {
             console.error('Error clearing follow-up:', error);
             window.utils.showNotification('Error clearing follow-up', 'error');
+        }
+    }
+
+    async updateEventSummaryStatus(leaderId, isChecked) {
+        if (!window.authManager.isAdmin()) {
+            console.log('[Dashboard] User is not admin, cannot update event summary');
+            return;
+        }
+
+        console.log('[Dashboard] Updating event summary for leader:', leaderId, 'to:', isChecked);
+
+        try {
+            const { data, error } = await supabase
+                .from('circle_leaders')
+                .update({ 
+                    event_summary_received: isChecked,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', leaderId)
+                .select();
+
+            if (error) {
+                console.error('[Dashboard] Error updating event summary:', error);
+                throw error;
+            }
+
+            console.log('[Dashboard] Event summary updated successfully:', data);
+
+            // Update the leader in our data
+            const leader = this.circleLeaders.find(l => l.id === leaderId);
+            if (leader) {
+                leader.event_summary_received = isChecked;
+            }
+
+            // Update the progress display
+            this.updateEventSummaryProgress();
+
+            window.utils.showNotification(
+                `Event Summary ${isChecked ? 'marked as received' : 'unmarked'}`, 
+                'success'
+            );
+        } catch (error) {
+            console.error('[Dashboard] Error updating event summary:', error);
+            window.utils.showNotification('Error updating event summary', 'error');
+            
+            // Revert the checkbox state on error
+            const checkbox = document.getElementById(`event-summary-${leaderId}`);
+            if (checkbox) {
+                checkbox.checked = !isChecked;
+            }
         }
     }
 
@@ -889,11 +957,14 @@ export default class DashboardPage {
             startOfMonth.setDate(1);
             startOfMonth.setHours(0, 0, 0, 0);
 
-            console.log('[Dashboard] Querying communications from:', startOfMonth.toISOString());
+            // Format as YYYY-MM-DD for DATE column
+            const startDateString = startOfMonth.toISOString().split('T')[0];
+
+            console.log('[Dashboard] Querying communications from:', startDateString);
             const { data: connections, error: connectionsError } = await supabase
                 .from('communications')
                 .select('circle_leader_id')
-                .gte('communication_date', startOfMonth.toISOString())
+                .gte('communication_date', startDateString)
                 .in('communication_type', window.APP_CONFIG.communicationTypes);
 
             console.log('[Dashboard] Communications query result:', { connections, error: connectionsError });
