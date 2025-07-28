@@ -25,6 +25,10 @@ ADD COLUMN IF NOT EXISTS email TEXT,
 ADD COLUMN IF NOT EXISTS phone TEXT,
 ADD COLUMN IF NOT EXISTS event_summary_received BOOLEAN DEFAULT FALSE;
 
+-- Add missing communication_date column to communications table
+ALTER TABLE public.communications 
+ADD COLUMN IF NOT EXISTS communication_date DATE DEFAULT CURRENT_DATE;
+
 -- 4. Insert the authenticated user with ACPD role
 -- First, try to get the current auth user ID, or generate a new UUID
 DO $$

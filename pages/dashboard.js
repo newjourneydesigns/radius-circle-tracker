@@ -16,6 +16,9 @@ export default class DashboardPage {
         this.sortOrder = 'asc';
         this.isLoading = false; // Prevent multiple simultaneous loads
         
+        // Store event handlers for cleanup
+        this.eventHandlers = {};
+        
         // Load saved filter state
         this.loadFilterState();
     }
@@ -390,15 +393,20 @@ export default class DashboardPage {
             }
         });
 
-        // Event summary checkbox handler (using event delegation)
-        document.addEventListener('change', async (e) => {
+        // Event summary checkbox handler (using event delegation with proper context)
+        this.eventHandlers.eventSummaryHandler = async (e) => {
             if (e.target.id && e.target.id.startsWith('event-summary-')) {
                 const leaderId = e.target.id.replace('event-summary-', '');
                 const isChecked = e.target.checked;
                 
+                console.log('[Dashboard] Event summary checkbox changed:', { leaderId, isChecked });
+                
                 // Update UI optimistically first
                 const leader = this.circleLeaders.find(l => l.id === leaderId);
                 const filteredLeader = this.filteredLeaders.find(l => l.id === leaderId);
+                
+                console.log('[Dashboard] Found leader in circleLeaders:', !!leader);
+                console.log('[Dashboard] Found leader in filteredLeaders:', !!filteredLeader);
                 
                 if (leader) {
                     leader.event_summary_received = isChecked;
@@ -413,7 +421,9 @@ export default class DashboardPage {
                 // Then update the database
                 await this.updateEventSummaryStatus(leaderId, isChecked);
             }
-        });
+        };
+        
+        document.addEventListener('change', this.eventHandlers.eventSummaryHandler);
 
         // Clear follow-up button handler (using event delegation)
         document.addEventListener('click', (e) => {
@@ -1194,7 +1204,12 @@ export default class DashboardPage {
     }
 
     cleanup() {
-        // Clean up any event listeners or timers and global reference
+        // Clean up event listeners
+        if (this.eventHandlers.eventSummaryHandler) {
+            document.removeEventListener('change', this.eventHandlers.eventSummaryHandler);
+        }
+        
+        // Clean up any timers and global reference
         window.dashboard = null;
     }
 }
