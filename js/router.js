@@ -33,8 +33,33 @@ class Router {
         const loading = document.getElementById('loading');
         const app = document.getElementById('app');
 
+        // Add navigation timeout
+        const navigationTimeout = setTimeout(() => {
+            console.error('[Router] Navigation timeout - forcing page load to complete');
+            if (loading) loading.classList.add('hidden');
+            app.innerHTML = `
+                <div class="min-h-screen flex items-center justify-center">
+                    <div class="text-center">
+                        <h1 class="text-2xl font-bold text-orange-600 mb-4">Navigation Timeout</h1>
+                        <p class="text-gray-600 mb-4">The page took too long to load. This might be a connection issue.</p>
+                        <div class="space-y-2">
+                            <button onclick="window.location.reload()" 
+                                    class="bg-primary-600 text-white px-4 py-2 rounded hover:bg-primary-700 mr-2">
+                                Refresh Page
+                            </button>
+                            <button onclick="window.router.navigate('/dashboard')" 
+                                    class="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                                Return to Dashboard
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }, 20000); // 20 second timeout
+
         // Check authentication for protected routes
         if (path !== '/login' && !window.authManager.isAuthenticated()) {
+            clearTimeout(navigationTimeout);
             console.log('[Router] Authentication check failed, redirecting to login');
             console.log('[Router] Path:', path, 'isAuthenticated:', window.authManager.isAuthenticated());
             this.navigate('/login');
@@ -88,11 +113,13 @@ class Router {
                         } else {
                             // 404 - redirect to dashboard
                             console.log('Invalid circle leader route, redirecting to dashboard');
+                            clearTimeout(navigationTimeout);
                             this.navigate('/dashboard');
                             return;
                         }
                     } else {
                         // 404 - redirect to dashboard
+                        clearTimeout(navigationTimeout);
                         this.navigate('/dashboard');
                         return;
                     }
@@ -130,7 +157,8 @@ class Router {
                 </div>
             `;
         } finally {
-            // Hide loading
+            // Hide loading and clear timeout
+            clearTimeout(navigationTimeout);
             if (loading) loading.classList.add('hidden');
         }
     }

@@ -14,6 +14,7 @@ export default class DashboardPage {
         };
         this.sortBy = 'name';
         this.sortOrder = 'asc';
+        this.isLoading = false; // Prevent multiple simultaneous loads
         
         // Load saved filter state
         this.loadFilterState();
@@ -408,14 +409,28 @@ export default class DashboardPage {
     }
 
     async loadData() {
+        if (this.isLoading) {
+            console.log('[Dashboard] Load already in progress, skipping');
+            return;
+        }
+        
+        this.isLoading = true;
         console.log('[Dashboard] loadData called');
+        
         try {
-            // Load circle leaders
+            // Load circle leaders with timeout
             console.log('[Dashboard] Loading circle leaders...');
-            const { data: leaders, error: leadersError } = await supabase
+            
+            const leadersPromise = supabase
                 .from('circle_leaders')
                 .select('*')
                 .order('name');
+            
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Database query timeout')), 15000)
+            );
+            
+            const { data: leaders, error: leadersError } = await Promise.race([leadersPromise, timeoutPromise]);
 
             console.log('[Dashboard] Circle leaders query result:', { leaders, error: leadersError });
 
@@ -453,6 +468,9 @@ export default class DashboardPage {
         } catch (error) {
             console.error('[Dashboard] Error loading data:', error);
             window.utils.showNotification('Error loading circle leaders', 'error');
+        } finally {
+            this.isLoading = false;
+            console.log('[Dashboard] Load complete, isLoading reset to false');
         }
     }
 

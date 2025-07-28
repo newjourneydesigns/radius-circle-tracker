@@ -108,3 +108,42 @@ const APP_CONFIG = {
 
 // Export for use in other modules
 window.APP_CONFIG = APP_CONFIG;
+
+// Connection health check
+let connectionHealthy = true;
+let lastHealthCheck = Date.now();
+
+async function checkConnectionHealth() {
+    try {
+        if (!window.supabase) return false;
+        
+        // Simple query to test connection
+        const { error } = await window.supabase
+            .from('users')
+            .select('id')
+            .limit(1);
+        
+        connectionHealthy = !error;
+        lastHealthCheck = Date.now();
+        
+        if (!connectionHealthy) {
+            console.warn('Connection health check failed:', error);
+        }
+        
+        return connectionHealthy;
+    } catch (error) {
+        console.error('Health check error:', error);
+        connectionHealthy = false;
+        return false;
+    }
+}
+
+// Run health check every 30 seconds
+setInterval(checkConnectionHealth, 30000);
+
+// Expose connection status
+window.getConnectionStatus = () => ({
+    healthy: connectionHealthy,
+    lastCheck: lastHealthCheck,
+    timeSinceLastCheck: Date.now() - lastHealthCheck
+});

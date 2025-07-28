@@ -22,7 +22,8 @@ ALTER COLUMN id SET DEFAULT gen_random_uuid();
 -- 3. Add email and phone columns to circle_leaders if they don't exist
 ALTER TABLE public.circle_leaders 
 ADD COLUMN IF NOT EXISTS email TEXT,
-ADD COLUMN IF NOT EXISTS phone TEXT;
+ADD COLUMN IF NOT EXISTS phone TEXT,
+ADD COLUMN IF NOT EXISTS event_summary_received BOOLEAN DEFAULT FALSE;
 
 -- 4. Insert the authenticated user with ACPD role
 -- First, try to get the current auth user ID, or generate a new UUID
@@ -81,18 +82,21 @@ DROP POLICY IF EXISTS "Only ACPD can manage circle leaders" ON public.circle_lea
 DROP POLICY IF EXISTS "ACPD can insert circle leaders" ON public.circle_leaders;
 DROP POLICY IF EXISTS "Authenticated users can view circle leaders" ON public.circle_leaders;
 DROP POLICY IF EXISTS "ACPD users can manage circle leaders" ON public.circle_leaders;
+DROP POLICY IF EXISTS "Authenticated users have full access to circle leaders" ON public.circle_leaders;
 DROP POLICY IF EXISTS "Users can view communications" ON public.communications;
 DROP POLICY IF EXISTS "Only admins can manage communications" ON public.communications;
 DROP POLICY IF EXISTS "Only ACPD can manage communications" ON public.communications;
 DROP POLICY IF EXISTS "ACPD can insert communications" ON public.communications;
 DROP POLICY IF EXISTS "Authenticated users can view communications" ON public.communications;
 DROP POLICY IF EXISTS "ACPD users can manage communications" ON public.communications;
+DROP POLICY IF EXISTS "Authenticated users have full access to communications" ON public.communications;
 DROP POLICY IF EXISTS "Users can view notes" ON public.notes;
 DROP POLICY IF EXISTS "Only admins can manage notes" ON public.notes;
 DROP POLICY IF EXISTS "Only ACPD can manage notes" ON public.notes;
 DROP POLICY IF EXISTS "ACPD can insert notes" ON public.notes;
 DROP POLICY IF EXISTS "Authenticated users can view notes" ON public.notes;
 DROP POLICY IF EXISTS "ACPD users can manage notes" ON public.notes;
+DROP POLICY IF EXISTS "Authenticated users have full access to notes" ON public.notes;
 
 -- 6. Create simplified RLS policies - any authenticated user gets full access
 -- Users table - disable RLS completely to avoid recursion

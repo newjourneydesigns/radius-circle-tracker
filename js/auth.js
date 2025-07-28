@@ -7,17 +7,31 @@ class AuthManager {
     }
 
     async init() {
-        // Wait for Supabase to be available
+        // Wait for Supabase to be available with timeout
+        let retryCount = 0;
+        const maxRetries = 50; // 5 seconds max wait
+        
+        while (!window.supabase && retryCount < maxRetries) {
+            console.log(`Waiting for Supabase to initialize... (${retryCount + 1}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, 100));
+            retryCount++;
+        }
+        
         if (!window.supabase) {
-            console.log('Waiting for Supabase to initialize...');
-            setTimeout(() => this.init(), 100);
+            console.error('Supabase failed to initialize after timeout');
             return;
         }
 
         try {
             console.log('Initializing auth manager...');
-            // Check if user is already logged in
-            const { data: { session }, error } = await window.supabase.auth.getSession();
+            
+            // Add timeout to session check
+            const sessionPromise = window.supabase.auth.getSession();
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Session check timeout')), 10000)
+            );
+            
+            const { data: { session }, error } = await Promise.race([sessionPromise, timeoutPromise]);
             console.log('Session check result:', { session, error });
             
             if (session && session.user) {
