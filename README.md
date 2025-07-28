@@ -33,14 +33,15 @@ A Progressive Web App (PWA) for Valley Creek Church staff to track and manage in
 
 1. Create a new Supabase project at [supabase.com](https://supabase.com)
 2. Get your project URL and anon key from the API settings
-3. Update `/js/config.js` with your Supabase credentials:
+3. Copy `js/env.example.js` to `js/env.js` and add your credentials:
 
 ```javascript
-const SUPABASE_CONFIG = {
-    url: 'YOUR_SUPABASE_URL',
-    anonKey: 'YOUR_SUPABASE_ANON_KEY'
+window.env = {
+  SUPABASE_URL: 'https://your-project.supabase.co',
+  SUPABASE_ANON_KEY: 'YOUR_ANON_KEY'
 };
 ```
+   *`js/env.js` is excluded from version control so your keys remain private.*
 
 ### 2. Database Schema
 
