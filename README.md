@@ -9,6 +9,7 @@ A Progressive Web App (PWA) for Valley Creek Church staff to track and manage in
 - **Communication Tracking** - Log various types of interactions with rich text notes
 - **Follow-up System** - Schedule and track follow-ups with Circle Leaders
 - **Reports** - Monthly summaries for Associate Campus Directors (ACDs)
+- **Excel Import** - Upload .xlsx files to quickly add Circle Leaders (Admin only)
 - **Progressive Web App** - Works offline and can be installed on mobile devices
 - **Dark/Light Mode** - Automatic theme switching with manual override
 - **Role-based Access** - ACD (full access) and Viewer (read-only) roles
@@ -208,6 +209,10 @@ The app supports light and dark modes automatically based on system preferences.
 3. **Offline Support** - Service worker caches essential resources
 4. **Rich Text Editing** - Native contenteditable with formatting support
 5. **Real-time Data** - Supabase real-time subscriptions (can be added)
+
+## 📂 Importing Excel Data
+
+Admins can bulk add Circle Leaders by navigating to `/import` from the menu. Upload a `.xlsx` file, map each column to the desired database field, preview the rows, and click **Import** to insert the records into Supabase.
 
 ## 🐛 Troubleshooting
 
