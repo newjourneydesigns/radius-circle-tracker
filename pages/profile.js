@@ -688,8 +688,6 @@ export default class ProfilePage {
     }
 
     async toggleEventSummary(isChecked) {
-        if (!window.authManager.isAdmin()) return;
-
         try {
             const { error } = await supabase
                 .from('circle_leaders')

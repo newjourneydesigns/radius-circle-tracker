@@ -766,8 +766,6 @@ export default class DashboardPage {
     }
 
     async clearFollowUp(leaderId) {
-        if (!window.authManager.isAdmin()) return;
-
         try {
             const { error } = await supabase
                 .from('circle_leaders')
@@ -789,11 +787,6 @@ export default class DashboardPage {
     }
 
     async updateEventSummaryStatus(leaderId, isChecked) {
-        if (!window.authManager.isAdmin()) {
-            console.log('[Dashboard] User is not admin, cannot update event summary');
-            return;
-        }
-
         console.log('[Dashboard] Updating event summary for leader:', leaderId, 'to:', isChecked);
 
         try {
@@ -839,8 +832,6 @@ export default class DashboardPage {
     }
 
     async uncheckAllEventSummaries() {
-        if (!window.authManager.isAdmin()) return;
-
         const filteredCount = this.filteredLeaders.length;
         const checkedCount = this.filteredLeaders.filter(l => l.event_summary_received).length;
 

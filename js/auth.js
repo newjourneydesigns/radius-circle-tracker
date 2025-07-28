@@ -188,16 +188,14 @@ class AuthManager {
     }
 
     isAdmin() {
-        console.log('isAdmin check:', {
-            userRole: this.userRole,
-            expectedRole: APP_CONFIG.roles.Admin,
-            isMatch: this.userRole === APP_CONFIG.roles.Admin
-        });
-        return this.userRole === APP_CONFIG.roles.Admin;
+        // All authenticated users now have admin access
+        console.log('isAdmin check: All authenticated users have full access');
+        return this.isAuthenticated();
     }
 
     isViewer() {
-        return this.userRole === APP_CONFIG.roles.VIEWER;
+        // No more viewer-only mode - everyone has full access
+        return false;
     }
 
     getCurrentUser() {

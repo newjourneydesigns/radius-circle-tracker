@@ -1,7 +1,8 @@
 -- Fix RADIUS Database Issues
 -- Run this SQL in Supabase SQL Editor
+-- Simplified permissions: Any authenticated user gets full access
 
--- 1. Update users table to use ACPD instead of Admin
+-- 1. Update users table to use ACPD instead of Admin (keep for compatibility)
 ALTER TABLE public.users 
 DROP CONSTRAINT IF EXISTS users_role_check;
 
@@ -69,8 +70,7 @@ BEGIN
     END IF;
 END $$;
 
--- 5. Update RLS policies to use ACPD instead of Admin
--- Drop existing policies
+-- 5. Drop all existing RLS policies
 DROP POLICY IF EXISTS "Users can view their own data" ON public.users;
 DROP POLICY IF EXISTS "Only admins can manage users" ON public.users;
 DROP POLICY IF EXISTS "Only ACPD can manage users" ON public.users;
@@ -94,42 +94,21 @@ DROP POLICY IF EXISTS "ACPD can insert notes" ON public.notes;
 DROP POLICY IF EXISTS "Authenticated users can view notes" ON public.notes;
 DROP POLICY IF EXISTS "ACPD users can manage notes" ON public.notes;
 
--- Create new policies with ACPD role - Fixed to avoid infinite recursion
--- Disable RLS on users table to prevent recursion
+-- 6. Create simplified RLS policies - any authenticated user gets full access
+-- Users table - disable RLS completely to avoid recursion
 ALTER TABLE public.users DISABLE ROW LEVEL SECURITY;
 
--- Circle leaders policies - simplified to avoid recursion
-CREATE POLICY "Authenticated users can view circle leaders" ON public.circle_leaders
-FOR SELECT USING (auth.uid() IS NOT NULL);
+-- Circle leaders - any authenticated user can do anything
+CREATE POLICY "Authenticated users have full access to circle leaders" ON public.circle_leaders
+FOR ALL USING (auth.uid() IS NOT NULL);
 
-CREATE POLICY "ACPD users can manage circle leaders" ON public.circle_leaders
-FOR ALL USING (
-  auth.uid() IN (
-    SELECT id FROM public.users WHERE role = 'ACPD'
-  )
-);
+-- Communications - any authenticated user can do anything
+CREATE POLICY "Authenticated users have full access to communications" ON public.communications
+FOR ALL USING (auth.uid() IS NOT NULL);
 
--- Communications policies - simplified
-CREATE POLICY "Authenticated users can view communications" ON public.communications
-FOR SELECT USING (auth.uid() IS NOT NULL);
+-- Notes - any authenticated user can do anything
+CREATE POLICY "Authenticated users have full access to notes" ON public.notes
+FOR ALL USING (auth.uid() IS NOT NULL);
 
-CREATE POLICY "ACPD users can manage communications" ON public.communications
-FOR ALL USING (
-  auth.uid() IN (
-    SELECT id FROM public.users WHERE role = 'ACPD'
-  )
-);
-
--- Notes policies - simplified
-CREATE POLICY "Authenticated users can view notes" ON public.notes
-FOR SELECT USING (auth.uid() IS NOT NULL);
-
-CREATE POLICY "ACPD users can manage notes" ON public.notes
-FOR ALL USING (
-  auth.uid() IN (
-    SELECT id FROM public.users WHERE role = 'ACPD'
-  )
-);
-
--- 6. Verify the setup
-SELECT 'Database fixes applied successfully!' as status;
+-- 7. Verify the setup
+SELECT 'Database fixes applied successfully! All authenticated users now have full access.' as status;
