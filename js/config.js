@@ -11,13 +11,16 @@ let supabaseClient;
 // Function to initialize Supabase when library is ready
 function initializeSupabase() {
     console.log('Attempting to initialize Supabase...');
+    console.log('Config URL:', SUPABASE_CONFIG.url);
+    console.log('Config Key (first 20 chars):', SUPABASE_CONFIG.anonKey.substring(0, 20) + '...');
     console.log('typeof supabase:', typeof supabase);
     console.log('typeof window.supabase:', typeof window.supabase);
     
     if (typeof supabase !== 'undefined') {
         supabaseClient = supabase.createClient(SUPABASE_CONFIG.url, SUPABASE_CONFIG.anonKey);
         window.supabase = supabaseClient;
-        console.log('Supabase client initialized successfully');
+        console.log('Supabase client initialized successfully with URL:', SUPABASE_CONFIG.url);
+        console.log('Supabase client object:', supabaseClient);
         console.log('Client object:', supabaseClient);
         return true;
     } else {

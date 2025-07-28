@@ -63,15 +63,16 @@
     </div>
     
     <!-- Scripts -->
-    <script src="/js/config.js"></script>
-    <script src="/js/auth.js"></script>
-    <script src="/js/router.js"></script>
-    <script src="/js/app.js"></script>
+    <script src="/js/config.js?v=2"></script>
+    <script src="/js/auth.js?v=2"></script>
+    <script src="/js/router.js?v=2"></script>
+    <script src="/js/app.js?v=2"></script>
     
     <!-- Service Worker Registration -->
     <script>
-        // Temporarily disable service worker to force fresh content
+        // Force clear all caches and reload
         if ('serviceWorker' in navigator) {
+            // Unregister all service workers
             navigator.serviceWorker.getRegistrations().then(function(registrations) {
                 for(let registration of registrations) {
                     registration.unregister();
@@ -87,12 +88,27 @@
                 });
             }
             
+            // Clear localStorage and sessionStorage
+            localStorage.clear();
+            sessionStorage.clear();
+            
+            console.log('All caches and storage cleared');
+            
             // Re-register after clearing
             setTimeout(() => {
                 navigator.serviceWorker.register('/sw.js')
                     .then(registration => console.log('SW registered'))
                     .catch(registrationError => console.log('SW registration failed'));
             }, 1000);
+        }
+        
+        // Force reload if this is the first load after cache clear
+        if (!sessionStorage.getItem('cache_cleared')) {
+            sessionStorage.setItem('cache_cleared', 'true');
+            console.log('Forcing reload to clear cached content');
+            setTimeout(() => {
+                window.location.reload(true);
+            }, 500);
         }
     </script>
 </body>
