@@ -57,8 +57,6 @@
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="js/config.js?v=4"></script>
     <script>
-        let supabaseClient;
-
         async function initializePage() {
             // Wait for config to be available
             await new Promise(resolve => {
@@ -71,8 +69,6 @@
                 };
                 checkConfig();
             });
-
-            supabaseClient = window.supabase;
             
             await checkAuthentication();
             await checkUserRecord();
@@ -84,7 +80,7 @@
             const authDiv = document.getElementById('authStatus');
             
             try {
-                const { data: { session }, error } = await supabaseClient.auth.getSession();
+                const { data: { session }, error } = await window.supabase.auth.getSession();
                 
                 if (error) throw error;
                 
@@ -113,14 +109,14 @@
             const userDiv = document.getElementById('userRecord');
             
             try {
-                const { data: { session } } = await supabaseClient.auth.getSession();
+                const { data: { session } } = await window.supabase.auth.getSession();
                 
                 if (!session) {
                     userDiv.innerHTML = '<p class="text-yellow-600">⚠️ Cannot check user record - not authenticated</p>';
                     return;
                 }
 
-                const { data: user, error } = await supabaseClient
+                const { data: user, error } = await window.supabase
                     .from('users')
                     .select('*')
                     .eq('email', session.user.email)
@@ -158,7 +154,7 @@
 
             for (const table of tables) {
                 try {
-                    const { data, error } = await supabaseClient
+                    const { data, error } = await window.supabase
                         .from(table)
                         .select('*')
                         .limit(1);
@@ -199,7 +195,7 @@
                     status: 'Active'
                 };
 
-                const { data, error } = await supabaseClient
+                const { data, error } = await window.supabase
                     .from('circle_leaders')
                     .insert([testData])
                     .select()
@@ -233,7 +229,7 @@
                 startDate.setDate(1);
                 const startDateString = startDate.toISOString().split('T')[0];
 
-                const { data, error } = await supabaseClient
+                const { data, error } = await window.supabase
                     .from('communications')
                     .select('*')
                     .gte('communication_date', startDateString)
