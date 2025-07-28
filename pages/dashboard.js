@@ -391,11 +391,27 @@ export default class DashboardPage {
         });
 
         // Event summary checkbox handler (using event delegation)
-        document.addEventListener('change', (e) => {
+        document.addEventListener('change', async (e) => {
             if (e.target.id && e.target.id.startsWith('event-summary-')) {
                 const leaderId = e.target.id.replace('event-summary-', '');
                 const isChecked = e.target.checked;
-                this.updateEventSummaryStatus(leaderId, isChecked);
+                
+                // Update UI optimistically first
+                const leader = this.circleLeaders.find(l => l.id === leaderId);
+                const filteredLeader = this.filteredLeaders.find(l => l.id === leaderId);
+                
+                if (leader) {
+                    leader.event_summary_received = isChecked;
+                }
+                if (filteredLeader) {
+                    filteredLeader.event_summary_received = isChecked;
+                }
+                
+                // Update progress bar immediately
+                this.updateEventSummaryProgress();
+                
+                // Then update the database
+                await this.updateEventSummaryStatus(leaderId, isChecked);
             }
         });
 
@@ -824,15 +840,6 @@ export default class DashboardPage {
 
             console.log('[Dashboard] Event summary updated successfully:', data);
 
-            // Update the leader in our data
-            const leader = this.circleLeaders.find(l => l.id === leaderId);
-            if (leader) {
-                leader.event_summary_received = isChecked;
-            }
-
-            // Update the progress display
-            this.updateEventSummaryProgress();
-
             window.utils.showNotification(
                 `Event Summary ${isChecked ? 'marked as received' : 'unmarked'}`, 
                 'success'
@@ -841,11 +848,25 @@ export default class DashboardPage {
             console.error('[Dashboard] Error updating event summary:', error);
             window.utils.showNotification('Error updating event summary', 'error');
             
-            // Revert the checkbox state on error
+            // Revert the local data and checkbox state on error
+            const leader = this.circleLeaders.find(l => l.id === leaderId);
+            const filteredLeader = this.filteredLeaders.find(l => l.id === leaderId);
+            
+            if (leader) {
+                leader.event_summary_received = !isChecked;
+            }
+            if (filteredLeader) {
+                filteredLeader.event_summary_received = !isChecked;
+            }
+            
+            // Revert the checkbox
             const checkbox = document.getElementById(`event-summary-${leaderId}`);
             if (checkbox) {
                 checkbox.checked = !isChecked;
             }
+            
+            // Update progress bar to reflect reverted state
+            this.updateEventSummaryProgress();
         }
     }
 
@@ -901,11 +922,16 @@ export default class DashboardPage {
         const progressBar = document.getElementById('eventSummaryProgressBar');
         const progressText = document.getElementById('eventSummaryProgressText');
         
-        if (!progressBar || !progressText) return;
+        if (!progressBar || !progressText) {
+            console.warn('[Dashboard] Progress bar elements not found');
+            return;
+        }
 
         const total = this.filteredLeaders.length;
         const completed = this.filteredLeaders.filter(l => l.event_summary_received).length;
         const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
+
+        console.log('[Dashboard] Progress update:', { total, completed, percentage });
 
         progressBar.style.width = `${percentage}%`;
         progressText.textContent = `${completed} of ${total} received`;
