@@ -178,14 +178,28 @@ export default class DashboardPage {
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h2>
                 </div>
                 
-                <!-- Progress Bar -->
+                <!-- Event Summary Progress Bar -->
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-                    <div class="flex items-center justify-between mb-2">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Monthly Progress</h3>
-                        <span id="progressText" class="text-sm text-gray-500 dark:text-gray-400">0 of 0 connected</span>
-                    </div>
-                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                        <div id="progressBar" class="bg-primary-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
+                        <!-- Progress Information -->
+                        <div class="flex items-center space-x-4">
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Event Summary Progress</h3>
+                            <div class="flex items-center space-x-2">
+                                <div class="bg-gray-200 dark:bg-gray-700 rounded-full h-3 w-32">
+                                    <div id="eventSummaryProgressBar" class="bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
+                                </div>
+                                <span id="eventSummaryProgressText" class="text-sm font-medium text-gray-900 dark:text-white">0 of 0 received</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Uncheck All Button -->
+                        <button id="uncheckAllBtn" onclick="window.dashboard.uncheckAllEventSummaries()"
+                                class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Uncheck All Displayed
+                        </button>
                     </div>
                 </div>
 
@@ -277,33 +291,6 @@ export default class DashboardPage {
                                 </svg>
                             </button>
                         </div>
-                    </div>
-                </div>
-                
-                <!-- Event Summary Progress and Controls -->
-                <div class="border-t border-gray-200 dark:border-gray-600 pt-4">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                        <!-- Progress Information -->
-                        <div class="flex items-center space-x-4">
-                            <div class="text-sm text-gray-600 dark:text-gray-400">
-                                Event Summary Progress:
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <div class="bg-gray-200 dark:bg-gray-700 rounded-full h-3 w-32">
-                                    <div id="eventSummaryProgressBar" class="bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-                                </div>
-                                <span id="eventSummaryProgressText" class="text-sm font-medium text-gray-900 dark:text-white">0 of 0 received</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Uncheck All Button -->
-                        <button id="uncheckAllBtn" onclick="window.dashboard.uncheckAllEventSummaries()"
-                                class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
-                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                            Uncheck All Displayed
-                        </button>
                     </div>
                 </div>
             </div>
@@ -975,14 +962,6 @@ export default class DashboardPage {
             const uniqueConnections = new Set(connections?.map(c => c.circle_leader_id)).size;
             const totalLeaders = this.circleLeaders.length;
             console.log('[Dashboard] Stats:', { uniqueConnections, totalLeaders });
-
-            // Update progress bar
-            const progressPercent = totalLeaders > 0 ? (uniqueConnections / totalLeaders) * 100 : 0;
-            const progressBar = document.getElementById('progressBar');
-            const progressText = document.getElementById('progressText');
-
-            if (progressBar) progressBar.style.width = `${progressPercent}%`;
-            if (progressText) progressText.textContent = `${uniqueConnections} of ${totalLeaders} connected`;
 
             // Today's circles (placeholder - implement based on your data model)
             const todayCirclesCount = document.getElementById('todayCirclesCount');
