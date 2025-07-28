@@ -393,37 +393,8 @@ export default class DashboardPage {
             }
         });
 
-        // Event summary checkbox handler (using event delegation with proper context)
-        this.eventHandlers.eventSummaryHandler = async (e) => {
-            if (e.target.id && e.target.id.startsWith('event-summary-')) {
-                const leaderId = e.target.id.replace('event-summary-', '');
-                const isChecked = e.target.checked;
-                
-                console.log('[Dashboard] Event summary checkbox changed:', { leaderId, isChecked });
-                
-                // Update UI optimistically first
-                const leader = this.circleLeaders.find(l => l.id === leaderId);
-                const filteredLeader = this.filteredLeaders.find(l => l.id === leaderId);
-                
-                console.log('[Dashboard] Found leader in circleLeaders:', !!leader);
-                console.log('[Dashboard] Found leader in filteredLeaders:', !!filteredLeader);
-                
-                if (leader) {
-                    leader.event_summary_received = isChecked;
-                }
-                if (filteredLeader) {
-                    filteredLeader.event_summary_received = isChecked;
-                }
-                
-                // Update progress bar immediately
-                this.updateEventSummaryProgress();
-                
-                // Then update the database
-                await this.updateEventSummaryStatus(leaderId, isChecked);
-            }
-        };
-        
-        document.addEventListener('change', this.eventHandlers.eventSummaryHandler);
+        // Remove the event delegation approach since we're using inline handlers
+        // Event summary checkbox handler is now handled via inline onchange
 
         // Clear follow-up button handler (using event delegation)
         document.addEventListener('click', (e) => {
@@ -432,6 +403,30 @@ export default class DashboardPage {
                 this.clearFollowUp(leaderId);
             }
         });
+    }
+
+    async handleEventSummaryChange(leaderId, isChecked) {
+        console.log('[Dashboard] Event summary checkbox changed:', { leaderId, isChecked });
+        
+        // Update UI optimistically first
+        const leader = this.circleLeaders.find(l => l.id === leaderId);
+        const filteredLeader = this.filteredLeaders.find(l => l.id === leaderId);
+        
+        console.log('[Dashboard] Found leader in circleLeaders:', !!leader);
+        console.log('[Dashboard] Found leader in filteredLeaders:', !!filteredLeader);
+        
+        if (leader) {
+            leader.event_summary_received = isChecked;
+        }
+        if (filteredLeader) {
+            filteredLeader.event_summary_received = isChecked;
+        }
+        
+        // Update progress bar immediately
+        this.updateEventSummaryProgress();
+        
+        // Then update the database
+        await this.updateEventSummaryStatus(leaderId, isChecked);
     }
 
     async loadData() {
@@ -724,6 +719,7 @@ export default class DashboardPage {
                             <input type="checkbox" 
                                    id="event-summary-${leader.id}" 
                                    ${leader.event_summary_received ? 'checked' : ''} 
+                                   onchange="window.dashboard.handleEventSummaryChange('${leader.id}', this.checked)"
                                    class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
                             <label for="event-summary-${leader.id}" class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
                                 Event Summary Received
@@ -1204,11 +1200,6 @@ export default class DashboardPage {
     }
 
     cleanup() {
-        // Clean up event listeners
-        if (this.eventHandlers.eventSummaryHandler) {
-            document.removeEventListener('change', this.eventHandlers.eventSummaryHandler);
-        }
-        
         // Clean up any timers and global reference
         window.dashboard = null;
     }
