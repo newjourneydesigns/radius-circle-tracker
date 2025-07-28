@@ -1,8 +1,8 @@
 // Supabase Configuration
-// Updated with correct project credentials
+// Credentials are loaded from window.env which should be defined in js/env.js
 const SUPABASE_CONFIG = {
-    url: 'https://pvjdsfhhcugnrzmibhab.supabase.co',
-    anonKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InB2amRzZmhoY3VnbnJ6bWliaGFiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM3MDQwNjEsImV4cCI6MjA2OTI4MDA2MX0.LXgde3rzdPLmfycDQW2Rf1nJ9qKMUBr2J6Yh1ZGp3Ic'
+    url: window.env?.SUPABASE_URL || '',
+    anonKey: window.env?.SUPABASE_ANON_KEY || ''
 };
 
 // Initialize Supabase client
@@ -10,6 +10,10 @@ let supabaseClient;
 
 // Function to initialize Supabase when library is ready
 function initializeSupabase() {
+    if (!SUPABASE_CONFIG.url || !SUPABASE_CONFIG.anonKey) {
+        console.error('Supabase credentials missing. Define SUPABASE_URL and SUPABASE_ANON_KEY in js/env.js');
+        return false;
+    }
     console.log('Attempting to initialize Supabase...');
     console.log('Config URL:', SUPABASE_CONFIG.url);
     console.log('Config Key (first 20 chars):', SUPABASE_CONFIG.anonKey.substring(0, 20) + '...');

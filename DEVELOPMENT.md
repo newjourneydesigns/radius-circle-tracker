@@ -5,7 +5,7 @@
 1. **Supabase Configuration**
    - Create a new project at https://supabase.com
    - Copy your project URL and anon key
-   - Update `js/config.js` with your credentials
+   - Duplicate `js/env.example.js` as `js/env.js` and add your credentials. This file is ignored by git.
 
 2. **Database Setup**
    - Run the SQL schema from `README.md` in your Supabase SQL editor
