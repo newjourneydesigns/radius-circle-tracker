@@ -3,25 +3,84 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>RADIUS - Setup Initial Users</title>
+    <title>RADIUS - User Management</title>
     <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 min-h-screen p-8">
-    <div class="max-w-2xl mx-auto">
+    <div class="max-w-4xl mx-auto">
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             <h1 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-                RADIUS - Setup Initial Users
+                RADIUS - User Management
             </h1>
             
             <div id="status" class="mb-4 p-4 rounded-md hidden">
                 <!-- Status messages will appear here -->
             </div>
             
-            <button id="setupBtn" onclick="setupUsers()" 
-                    class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                Create Initial Users
-            </button>
+            <!-- User Creation Form -->
+            <div class="bg-gray-50 dark:bg-gray-700 p-6 rounded-lg mb-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Add New User</h2>
+                
+                <form id="userForm" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label for="userName" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Full Name
+                            </label>
+                            <input type="text" id="userName" required
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                                   placeholder="Enter full name">
+                        </div>
+                        
+                        <div>
+                            <label for="userEmail" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Email Address
+                            </label>
+                            <input type="email" id="userEmail" required
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                                   placeholder="user@valleycreek.org">
+                        </div>
+                        
+                        <div>
+                            <label for="userPassword" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Password
+                            </label>
+                            <input type="password" id="userPassword" required
+                                   class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white"
+                                   placeholder="Enter secure password">
+                        </div>
+                        
+                        <div>
+                            <label for="userRole" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                Role
+                            </label>
+                            <select id="userRole" required
+                                    class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-800 dark:text-white">
+                                <option value="">Select Role</option>
+                                <option value="ACPD">ACPD (Full Access)</option>
+                                <option value="Viewer">Viewer (Read Only)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" id="createUserBtn"
+                            class="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50">
+                        Create User
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Quick Setup Section -->
+            <div class="border-t border-gray-200 dark:border-gray-600 pt-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Setup</h2>
+                <p class="text-gray-600 dark:text-gray-400 mb-4">Create default admin and viewer accounts for testing:</p>
+                
+                <button id="setupBtn" onclick="setupDefaultUsers()" 
+                        class="bg-green-600 text-white px-6 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500">
+                    Create Default Test Users
+                </button>
+            </div>
             
             <div id="results" class="mt-6 space-y-4 hidden">
                 <!-- Results will appear here -->
@@ -47,12 +106,109 @@
             statusDiv.classList.remove('hidden');
         }
 
-        async function setupUsers() {
+        function showResults(html) {
+            const resultsDiv = document.getElementById('results');
+            resultsDiv.innerHTML = html;
+            resultsDiv.classList.remove('hidden');
+        }
+
+        async function createUser(name, email, password, role) {
+            try {
+                // Sign out any existing session first
+                await supabaseClient.auth.signOut();
+                
+                // Create the user
+                const { data, error } = await supabaseClient.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            name: name
+                        }
+                    }
+                });
+
+                if (error) {
+                    console.error('User creation error:', error);
+                    throw error;
+                }
+
+                return { data, role };
+            } catch (error) {
+                throw error;
+            }
+        }
+
+        // Handle form submission
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const createUserBtn = document.getElementById('createUserBtn');
+            const name = document.getElementById('userName').value;
+            const email = document.getElementById('userEmail').value;
+            const password = document.getElementById('userPassword').value;
+            const role = document.getElementById('userRole').value;
+            
+            createUserBtn.disabled = true;
+            createUserBtn.textContent = 'Creating user...';
+            
+            try {
+                showStatus(`Creating user: ${name}...`, 'info');
+                
+                const result = await createUser(name, email, password, role);
+                
+                showStatus('User created successfully!', 'success');
+                
+                showResults(`
+                    <div class="space-y-4">
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">User Created Successfully!</h3>
+                        
+                        <div class="bg-green-50 dark:bg-green-900 p-4 rounded-md">
+                            <h4 class="font-medium text-green-800 dark:text-green-200">${role} User</h4>
+                            <p class="text-green-700 dark:text-green-300">Name: ${name}</p>
+                            <p class="text-green-700 dark:text-green-300">Email: ${email}</p>
+                            <p class="text-green-700 dark:text-green-300">Password: ${password}</p>
+                            <p class="text-green-700 dark:text-green-300">User ID: ${result.data.user?.id || 'Check console'}</p>
+                        </div>
+                        
+                        <div class="bg-yellow-50 dark:bg-yellow-900 p-4 rounded-md">
+                            <h4 class="font-medium text-yellow-800 dark:text-yellow-200">Next Steps</h4>
+                            <ol class="list-decimal list-inside text-yellow-700 dark:text-yellow-300 space-y-2">
+                                <li>Check email for confirmation link</li>
+                                <li>Click the confirmation link to verify email</li>
+                                <li>Run this SQL in Supabase to set user role:</li>
+                            </ol>
+                            <div class="mt-3 p-3 bg-gray-800 rounded text-green-400 text-sm font-mono overflow-x-auto">
+INSERT INTO users (id, email, name, role) VALUES<br>
+('${result.data.user?.id}', '${email}', '${name}', '${role}')<br>
+ON CONFLICT (email) DO UPDATE SET<br>
+  name = EXCLUDED.name,<br>
+  role = EXCLUDED.role;
+                            </div>
+                        </div>
+                    </div>
+                `);
+
+                // Clear the form
+                document.getElementById('userForm').reset();
+                
+                console.log('User created:', result.data);
+
+            } catch (error) {
+                showStatus(`Error creating user: ${error.message}`, 'error');
+                console.error('User creation error:', error);
+            } finally {
+                createUserBtn.disabled = false;
+                createUserBtn.textContent = 'Create User';
+            }
+        });
+
+        async function setupDefaultUsers() {
             const setupBtn = document.getElementById('setupBtn');
             const resultsDiv = document.getElementById('results');
             
             setupBtn.disabled = true;
-            setupBtn.textContent = 'Creating users...';
+            setupBtn.textContent = 'Creating default users...';
             
             try {
                 // Sign out any existing session first
@@ -95,11 +251,11 @@
                 }
 
                 // Show results
-                showStatus('Users created successfully!', 'success');
+                showStatus('Default users created successfully!', 'success');
                 
-                resultsDiv.innerHTML = `
+                showResults(`
                     <div class="space-y-4">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Created Users:</h3>
+                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Default Users Created:</h3>
                         
                         <div class="bg-green-50 dark:bg-green-900 p-4 rounded-md">
                             <h4 class="font-medium text-green-800 dark:text-green-200">ACPD Admin User</h4>
@@ -110,7 +266,7 @@
                         
                         <div class="bg-blue-50 dark:bg-blue-900 p-4 rounded-md">
                             <h4 class="font-medium text-blue-800 dark:text-blue-200">Viewer User</h4>
-                            <p class="text-blue-700 dark:text-blue-300">Email: viewer@valleycreek.org</p>
+                            <p class="text-blue-700 dark:text-blue-300">Email: tripochenski@gmail.com</p>
                             <p class="text-blue-700 dark:text-blue-300">Password: ViewerPass123!</p>
                             <p class="text-blue-700 dark:text-blue-300">User ID: ${viewerData.user?.id || 'Check console'}</p>
                         </div>
@@ -125,31 +281,30 @@
                             <div class="mt-3 p-3 bg-gray-800 rounded text-green-400 text-sm font-mono overflow-x-auto">
 INSERT INTO users (id, email, name, role) VALUES<br>
 ('${adminData.user?.id}', 'trip.ochenski@valleycreek.org', 'Trip Ochenski', 'ACPD'),<br>
-('${viewerData.user?.id}', 'viewer@valleycreek.org', 'Test Viewer', 'Viewer')<br>
+('${viewerData.user?.id}', 'tripochenski@gmail.com', 'Test Viewer', 'Viewer')<br>
 ON CONFLICT (email) DO UPDATE SET<br>
   name = EXCLUDED.name,<br>
   role = EXCLUDED.role;
                             </div>
                         </div>
                     </div>
-                `;
-                resultsDiv.classList.remove('hidden');
+                `);
 
                 console.log('Admin user created:', adminData);
                 console.log('Viewer user created:', viewerData);
 
             } catch (error) {
-                showStatus(`Error creating users: ${error.message}`, 'error');
+                showStatus(`Error creating default users: ${error.message}`, 'error');
                 console.error('Setup error:', error);
             } finally {
                 setupBtn.disabled = false;
-                setupBtn.textContent = 'Create Initial Users';
+                setupBtn.textContent = 'Create Default Test Users';
             }
         }
 
         // Show initial instructions
         document.addEventListener('DOMContentLoaded', () => {
-            showStatus('Ready to create initial RADIUS users. Click the button to start.', 'info');
+            showStatus('Ready to create RADIUS users. Fill out the form above to add new users, or use quick setup for default test accounts.', 'info');
         });
     </script>
 </body>
