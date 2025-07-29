@@ -406,7 +406,6 @@ export default class ProfilePage {
         // Set today's date as default
         const today = new Date().toISOString().split('T')[0];
         const commDate = document.getElementById('commDate');
-        const followUpDate = document.getElementById('followUpDate');
         
         if (commDate) commDate.value = today;
     }
