@@ -537,14 +537,35 @@ export default class CircleLeaderPage {
 
         } catch (error) {
             console.error('[CircleLeader] Error saving circle leader:', error);
+            console.error('[CircleLeader] Error details:', {
+                message: error.message,
+                details: error.details,
+                hint: error.hint,
+                code: error.code
+            });
             
             // Reset submission flag on error
             this.isSubmitting = false;
             
-            window.utils.showNotification(
-                `Error ${this.isEditing ? 'updating' : 'creating'} circle leader: ` + error.message,
-                'error'
-            );
+            // Show more detailed error message
+            let errorMessage = `Error ${this.isEditing ? 'updating' : 'creating'} circle leader: `;
+            
+            if (error.message) {
+                errorMessage += error.message;
+            } else {
+                errorMessage += 'Unknown error occurred';
+            }
+            
+            // Add additional details if available
+            if (error.details) {
+                errorMessage += ` (${error.details})`;
+            }
+            
+            if (error.hint) {
+                errorMessage += ` Hint: ${error.hint}`;
+            }
+            
+            window.utils.showNotification(errorMessage, 'error');
         }
     }
 
