@@ -19,13 +19,82 @@ class App {
         // Initialize dark mode
         this.initTheme();
         
-        // Wait for auth manager to initialize
-        while (!window.authManager) {
+        // Wait for auth manager to initialize with timeout
+        let attempts = 0;
+        const maxAttempts = 50; // 5 seconds total
+        while (!window.authManager && attempts < maxAttempts) {
             await new Promise(resolve => setTimeout(resolve, 100));
+            attempts++;
         }
 
-        // Start routing
+        if (!window.authManager) {
+            console.error('AuthManager failed to initialize within 5 seconds');
+            this.showInitError();
+            return;
+        }
+
+        // Set up global error handlers
+        this.setupErrorHandlers();
+
         console.log('RADIUS App Ready');
+    }
+
+    setupErrorHandlers() {
+        // Global error handler for unhandled promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+            console.error('Unhandled promise rejection:', event.reason);
+            
+            // Don't show user notification for certain types of errors
+            if (event.reason?.message?.includes('Navigation timeout') || 
+                event.reason?.message?.includes('Page init timeout')) {
+                return;
+            }
+            
+            window.utils?.showNotification('An unexpected error occurred', 'error');
+        });
+
+        // Global error handler for JavaScript errors
+        window.addEventListener('error', (event) => {
+            console.error('Global error:', event.error);
+            
+            // Don't show user notification for module loading errors
+            if (event.error?.message?.includes('Failed to fetch') ||
+                event.error?.message?.includes('Loading module')) {
+                return;
+            }
+            
+            window.utils?.showNotification('A JavaScript error occurred', 'error');
+        });
+    }
+
+    showInitError() {
+        const app = document.getElementById('app');
+        const loading = document.getElementById('loading');
+        
+        if (loading) loading.classList.add('hidden');
+        
+        if (app) {
+            app.innerHTML = `
+                <div class="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
+                    <div class="text-center max-w-md mx-auto p-6">
+                        <h1 class="text-2xl font-bold text-red-600 mb-4">Initialization Error</h1>
+                        <p class="text-gray-600 dark:text-gray-400 mb-6">
+                            The application failed to initialize properly. This might be due to a network issue or server problem.
+                        </p>
+                        <div class="space-y-3">
+                            <button onclick="window.location.reload()" 
+                                    class="w-full bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                                Reload Application
+                            </button>
+                            <button onclick="localStorage.clear(); window.location.reload()" 
+                                    class="w-full bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700">
+                                Clear Data & Reload
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
     }
 
     initTheme() {

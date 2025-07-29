@@ -1,10 +1,11 @@
 // Circle Leader Profile Page Module
 export default class ProfilePage {
     constructor() {
-        this.leaderId = null;
         this.leader = null;
         this.communications = [];
         this.notes = [];
+        this.leaderId = null;
+        this.eventHandlers = {}; // Track event listeners for cleanup
     }
 
     render() {
@@ -116,13 +117,6 @@ export default class ProfilePage {
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                             </svg>
                             Edit Profile
-                        </button>
-                        <button onclick="window.profilePage.exportHistory()" 
-                                class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 flex items-center">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                            </svg>
-                            Export History
                         </button>
                     </div>
                 </div>
@@ -378,23 +372,32 @@ export default class ProfilePage {
     }
 
     setupEventListeners() {
-        // Menu dropdown toggle
-        document.addEventListener('click', (e) => {
+        console.log('[Profile] Setting up event listeners...');
+        
+        // Menu dropdown toggle - use event delegation
+        const menuClickHandler = (e) => {
             const menuButton = document.getElementById('menuButton');
             const menuDropdown = document.getElementById('menuDropdown');
             
             if (menuButton && menuDropdown) {
                 if (menuButton.contains(e.target)) {
+                    e.stopPropagation();
                     menuDropdown.classList.toggle('hidden');
                 } else if (!menuDropdown.contains(e.target)) {
                     menuDropdown.classList.add('hidden');
                 }
             }
-        });
+        };
+        document.addEventListener('click', menuClickHandler);
+        this.eventHandlers.menuClick = { element: document, handler: menuClickHandler };
 
         // Note form
         const noteForm = document.getElementById('noteForm');
-        noteForm?.addEventListener('submit', (e) => this.handleNoteSubmit(e));
+        if (noteForm) {
+            const noteSubmitHandler = (e) => this.handleNoteSubmit(e);
+            noteForm.addEventListener('submit', noteSubmitHandler);
+            this.eventHandlers.noteSubmit = { element: noteForm, handler: noteSubmitHandler };
+        }
 
         // Rich text editor placeholders
         this.setupRichTextEditors();
@@ -419,18 +422,25 @@ export default class ProfilePage {
                 }
             };
 
-            editor.addEventListener('focus', () => {
+            const focusHandler = () => {
                 editor.classList.add('focus');
                 if (editor.innerHTML === editor.dataset.placeholder) {
                     editor.classList.remove('text-gray-400', 'dark:text-gray-500');
                     editor.innerHTML = '';
                 }
-            });
+            };
 
-            editor.addEventListener('blur', () => {
+            const blurHandler = () => {
                 editor.classList.remove('focus');
                 updatePlaceholder();
-            });
+            };
+
+            editor.addEventListener('focus', focusHandler);
+            editor.addEventListener('blur', blurHandler);
+            
+            // Store handlers for cleanup
+            this.eventHandlers[`${editorId}_focus`] = { element: editor, handler: focusHandler };
+            this.eventHandlers[`${editorId}_blur`] = { element: editor, handler: blurHandler };
 
             updatePlaceholder();
         });
@@ -464,16 +474,6 @@ export default class ProfilePage {
         } catch (error) {
             console.error('Error saving note:', error);
             window.utils.showNotification('Error saving note', 'error');
-        }
-    }
-
-    async exportHistory() {
-        try {
-            // Implement Excel export functionality
-            window.utils.showNotification('Export feature coming soon', 'info');
-        } catch (error) {
-            console.error('Error exporting history:', error);
-            window.utils.showNotification('Error exporting history', 'error');
         }
     }
 
@@ -659,7 +659,37 @@ export default class ProfilePage {
     }
 
     cleanup() {
-        // Clean up any event listeners or timers and global reference
-        window.profilePage = null;
+        console.log('[Profile] Cleaning up event listeners...');
+        
+        // Clean up event listeners to prevent memory leaks
+        Object.entries(this.eventHandlers).forEach(([key, { element, handler }]) => {
+            if (element && handler) {
+                try {
+                    // Determine the event type based on the key
+                    const eventType = key.includes('Click') || key.includes('click') 
+                        ? 'click' 
+                        : key.includes('Submit') || key.includes('submit')
+                        ? 'submit'
+                        : key.includes('focus')
+                        ? 'focus'
+                        : key.includes('blur')
+                        ? 'blur'
+                        : 'change';
+                    
+                    element.removeEventListener(eventType, handler);
+                    console.log(`[Profile] Removed ${eventType} listener for ${key}`);
+                } catch (error) {
+                    console.warn(`[Profile] Error removing listener for ${key}:`, error);
+                }
+            }
+        });
+        this.eventHandlers = {};
+        
+        // Clean up global reference
+        if (window.profilePage === this) {
+            window.profilePage = null;
+        }
+        
+        console.log('[Profile] Cleanup complete');
     }
 }

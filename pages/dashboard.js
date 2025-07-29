@@ -485,17 +485,25 @@ export default class DashboardPage {
 
         // Filter toggle button
         const toggleFiltersBtn = document.getElementById('toggleFiltersBtn');
-        toggleFiltersBtn?.addEventListener('click', () => {
+        const toggleFiltersHandler = () => {
             this.toggleFilters();
-        });
+        };
+        if (toggleFiltersBtn) {
+            toggleFiltersBtn.addEventListener('click', toggleFiltersHandler);
+            this.eventHandlers.toggleFilters = { element: toggleFiltersBtn, handler: toggleFiltersHandler };
+        }
 
         // Search with debounce
         const searchInput = document.getElementById('search');
-        searchInput?.addEventListener('input', window.utils.debounce((e) => {
+        const searchHandler = window.utils.debounce((e) => {
             this.filters.search = e.target.value;
             this.applyFilters();
             this.saveFilterState();
-        }, 300));
+        }, 300);
+        if (searchInput) {
+            searchInput.addEventListener('input', searchHandler);
+            this.eventHandlers.searchInput = { element: searchInput, handler: searchHandler };
+        }
 
         // Filters
         const campusFilter = document.getElementById('campusFilter');
@@ -504,57 +512,87 @@ export default class DashboardPage {
         const meetingDayFilter = document.getElementById('meetingDayFilter');
         const circleTypeFilter = document.getElementById('circleTypeFilter');
 
-        campusFilter?.addEventListener('change', () => {
+        const campusHandler = () => {
             this.filters.campus = Array.from(campusFilter.selectedOptions).map(option => option.value);
             this.applyFilters();
             this.saveFilterState();
-        });
+        };
+        if (campusFilter) {
+            campusFilter.addEventListener('change', campusHandler);
+            this.eventHandlers.campusFilter = { element: campusFilter, handler: campusHandler };
+        }
 
-        acpdFilter?.addEventListener('change', () => {
+        const acpdHandler = () => {
             this.filters.acpd = Array.from(acpdFilter.selectedOptions).map(option => option.value);
             this.applyFilters();
             this.saveFilterState();
-        });
+        };
+        if (acpdFilter) {
+            acpdFilter.addEventListener('change', acpdHandler);
+            this.eventHandlers.acpdFilter = { element: acpdFilter, handler: acpdHandler };
+        }
 
-        statusFilter?.addEventListener('change', () => {
+        const statusHandler = () => {
             this.filters.status = Array.from(statusFilter.selectedOptions).map(option => option.value);
             this.applyFilters();
             this.saveFilterState();
-        });
+        };
+        if (statusFilter) {
+            statusFilter.addEventListener('change', statusHandler);
+            this.eventHandlers.statusFilter = { element: statusFilter, handler: statusHandler };
+        }
 
-        meetingDayFilter?.addEventListener('change', () => {
+        const meetingDayHandler = () => {
             this.filters.meetingDay = Array.from(meetingDayFilter.selectedOptions).map(option => option.value);
             this.applyFilters();
             this.saveFilterState();
-        });
+        };
+        if (meetingDayFilter) {
+            meetingDayFilter.addEventListener('change', meetingDayHandler);
+            this.eventHandlers.meetingDayFilter = { element: meetingDayFilter, handler: meetingDayHandler };
+        }
 
-        circleTypeFilter?.addEventListener('change', () => {
+        const circleTypeHandler = () => {
             this.filters.circleType = Array.from(circleTypeFilter.selectedOptions).map(option => option.value);
             this.applyFilters();
             this.saveFilterState();
-        });
+        };
+        if (circleTypeFilter) {
+            circleTypeFilter.addEventListener('change', circleTypeHandler);
+            this.eventHandlers.circleTypeFilter = { element: circleTypeFilter, handler: circleTypeHandler };
+        }
 
         // Event Summary Filter
         const eventSummaryFilter = document.getElementById('eventSummaryFilter');
-        eventSummaryFilter?.addEventListener('change', () => {
+        const eventSummaryHandler = () => {
             this.filters.eventSummary = eventSummaryFilter.value;
             this.applyFilters();
             this.saveFilterState();
-        });
+        };
+        if (eventSummaryFilter) {
+            eventSummaryFilter.addEventListener('change', eventSummaryHandler);
+            this.eventHandlers.eventSummaryFilter = { element: eventSummaryFilter, handler: eventSummaryHandler };
+        }
 
         // Reset Checkboxes Button
         const resetCheckboxesBtn = document.getElementById('resetCheckboxesBtn');
-        resetCheckboxesBtn?.addEventListener('click', () => {
+        const resetCheckboxesHandler = () => {
             this.resetEventSummaryCheckboxes();
-        });
+        };
+        if (resetCheckboxesBtn) {
+            resetCheckboxesBtn.addEventListener('click', resetCheckboxesHandler);
+            this.eventHandlers.resetCheckboxes = { element: resetCheckboxesBtn, handler: resetCheckboxesHandler };
+        }
 
         // Phone modal click outside handler
-        document.addEventListener('click', (e) => {
+        const phoneModalHandler = (e) => {
             const modal = document.getElementById('phoneModal');
             if (modal && !modal.classList.contains('hidden') && e.target === modal) {
                 this.closePhoneModal();
             }
-        });
+        };
+        document.addEventListener('click', phoneModalHandler);
+        this.eventHandlers.phoneModal = { element: document, handler: phoneModalHandler };
     }
 
     toggleFilters() {
@@ -1501,18 +1539,40 @@ export default class DashboardPage {
     }
 
     cleanup() {
+        console.log('[Dashboard] Cleaning up event listeners...');
+        
         // Clean up event listeners to prevent memory leaks and duplicates
-        Object.values(this.eventHandlers).forEach(({ element, handler }) => {
+        Object.entries(this.eventHandlers).forEach(([key, { element, handler }]) => {
             if (element && handler) {
-                element.removeEventListener('click', handler);
+                try {
+                    // Determine the event type based on the key
+                    const eventType = key.includes('Click') || key.includes('Modal') || key.includes('Menu') 
+                        ? 'click' 
+                        : key.includes('Input') || key.includes('search') 
+                        ? 'input' 
+                        : 'change';
+                    
+                    element.removeEventListener(eventType, handler);
+                    console.log(`[Dashboard] Removed ${eventType} listener for ${key}`);
+                } catch (error) {
+                    console.warn(`[Dashboard] Error removing listener for ${key}:`, error);
+                }
             }
         });
         this.eventHandlers = {};
+        
+        // Clean up any timeouts or intervals
+        if (this.loadTimeout) {
+            clearTimeout(this.loadTimeout);
+            this.loadTimeout = null;
+        }
         
         // Clean up global reference
         if (window.dashboard === this) {
             window.dashboard = null;
         }
+        
+        console.log('[Dashboard] Cleanup complete');
     }
 }
 // Cache bust: Mon Jul 28 00:45:35 CDT 2025
