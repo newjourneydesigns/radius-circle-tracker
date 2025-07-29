@@ -474,8 +474,96 @@ export default class ProfilePage {
     }
 
     async editEntry(entryId, entryType) {
-        // Implement edit functionality
-        window.utils.showNotification('Edit feature coming soon', 'info');
+        try {
+            // Find the entry in our data
+            let entry;
+            if (entryType === 'note') {
+                entry = this.notes.find(note => note.id === entryId);
+            } else {
+                entry = this.communications.find(comm => comm.id === entryId);
+            }
+
+            if (!entry) {
+                window.utils.showNotification('Entry not found', 'error');
+                return;
+            }
+
+            // Create a modal for editing
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            modal.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 rounded-lg shadow-xl max-w-md w-full mx-4">
+                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Edit ${entryType === 'note' ? 'Note' : 'Communication'}</h3>
+                    </div>
+                    <div class="px-6 py-4">
+                        <form id="editEntryForm">
+                            <div class="mb-4">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                                    ${entryType === 'note' ? 'Note' : 'Communication'}
+                                </label>
+                                <div id="editEntryEditor" class="border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white min-h-[100px] p-3 focus-within:ring-primary-500 focus-within:border-primary-500"
+                                     contenteditable="true">${entry.content || entry.note || ''}</div>
+                            </div>
+                            <div class="flex justify-end space-x-3">
+                                <button type="button" onclick="this.closest('.fixed').remove()" 
+                                        class="px-4 py-2 text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-600 rounded hover:bg-gray-300 dark:hover:bg-gray-500">
+                                    Cancel
+                                </button>
+                                <button type="submit" 
+                                        class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">
+                                    Save Changes
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Handle form submission
+            const form = document.getElementById('editEntryForm');
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const newContent = document.getElementById('editEntryEditor').innerHTML;
+                const table = entryType === 'note' ? 'notes' : 'communications';
+                const field = entryType === 'note' ? 'content' : 'note';
+                
+                try {
+                    const { error } = await supabase
+                        .from(table)
+                        .update({ [field]: newContent })
+                        .eq('id', entryId);
+
+                    if (error) throw error;
+
+                    window.utils.showNotification(`${entryType === 'note' ? 'Note' : 'Communication'} updated successfully`, 'success');
+                    modal.remove();
+                    
+                    // Reload data and refresh display
+                    await this.loadLeaderData();
+                    this.renderProfile();
+                    this.setupEventListeners();
+
+                } catch (error) {
+                    console.error('Error updating entry:', error);
+                    window.utils.showNotification('Error updating entry', 'error');
+                }
+            });
+
+            // Close modal when clicking outside
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
+                }
+            });
+
+        } catch (error) {
+            console.error('Error editing entry:', error);
+            window.utils.showNotification('Error editing entry', 'error');
+        }
     }
 
     async deleteEntry(entryId, entryType) {
