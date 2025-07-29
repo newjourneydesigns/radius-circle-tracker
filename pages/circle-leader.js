@@ -296,21 +296,13 @@ export default class CircleLeaderPage {
         console.log('URL segments:', segments);
         console.log('Current path:', window.location.pathname);
         
-        if (segments.length > 1 && segments[0] === 'circle-leader') {
-            if (segments[1] === 'new') {
-                // This is a new leader page: /circle-leader/new
-                console.log('Setting up new leader mode');
-                this.isEditing = false;
-                this.leaderId = null;
-                this.leader = null;
-                console.log('isEditing set to:', this.isEditing);
-            } else if (segments.length > 2 && segments[2] === 'edit') {
+        if (segments.length > 1 && segments[0] === 'circle-leader' && segments[1] !== 'new') {
+            if (segments.length > 2 && segments[2] === 'edit') {
                 // This is an edit page: /circle-leader/123/edit
                 console.log('Setting up edit mode for leader:', segments[1]);
                 this.isEditing = true;
                 this.leaderId = segments[1];
                 console.log('isEditing set to:', this.isEditing);
-                await this.loadLeaderData();
             } else {
                 // This shouldn't happen as profile pages use a different component
                 // But let's handle it gracefully
@@ -318,12 +310,7 @@ export default class CircleLeaderPage {
                 window.router.navigate('/dashboard');
                 return;
             }
-        } else {
-            // Default to new leader if no clear path segments
-            console.log('No clear path segments, defaulting to new leader mode');
-            this.isEditing = false;
-            this.leaderId = null;
-            this.leader = null;
+            await this.loadLeaderData();
         }
 
         console.log('Before populateForm - isEditing:', this.isEditing);
@@ -447,9 +434,13 @@ export default class CircleLeaderPage {
         const formData = new FormData(e.target);
         const allData = {};
         
+        console.log('[CircleLeader] FormData entries:');
         for (let [key, value] of formData) {
+            console.log(`[CircleLeader] Form field: ${key} = "${value}"`);
             allData[key] = value || null;
         }
+        
+        console.log('[CircleLeader] All collected form data:', allData);
 
         // Only include fields that exist in the database schema and are in the form
         const validFields = {
@@ -470,15 +461,12 @@ export default class CircleLeaderPage {
         const data = {};
         for (let [key, value] of Object.entries(validFields)) {
             if (value !== null && value !== undefined) {
-                // For required fields, validate they're not empty
+                // For required fields, don't save empty strings
                 if (['name', 'email', 'campus', 'acpd', 'status'].includes(key) && value === '') {
-                    console.warn(`[CircleLeader] Required field '${key}' is empty`);
-                    // Don't skip - let validation handle this
-                    data[key] = value;
-                } else {
-                    // For optional fields, save even if empty string
-                    data[key] = value;
+                    continue; // Skip empty required fields
                 }
+                // For optional fields, save even if empty string
+                data[key] = value;
             }
         }
 
@@ -486,21 +474,11 @@ export default class CircleLeaderPage {
         console.log('[CircleLeader] Filtered valid data:', data);
         console.log('[CircleLeader] Is editing:', this.isEditing);
         console.log('[CircleLeader] Leader ID:', this.leaderId);
+        console.log('[CircleLeader] Supabase client available:', !!window.supabase);
 
-        // Validate required fields before submission
-        const requiredFields = ['name', 'email', 'campus', 'acpd'];
-        const missingFields = [];
-        for (const field of requiredFields) {
-            if (!data[field] || data[field].trim() === '') {
-                missingFields.push(field);
-            }
-        }
-
-        if (missingFields.length > 0) {
-            console.error('[CircleLeader] Missing required fields:', missingFields);
-            window.utils.showNotification(`Please fill in required fields: ${missingFields.join(', ')}`, 'error');
-            this.isSubmitting = false;
-            return;
+        // Ensure supabase is available
+        if (!window.supabase) {
+            throw new Error('Supabase client not available');
         }
 
         try {
@@ -511,7 +489,7 @@ export default class CircleLeaderPage {
                 console.log('[CircleLeader] Updating leader with ID:', this.leaderId);
                 console.log('[CircleLeader] Update data:', data);
                 
-                const { data: updateData, error: updateError } = await supabase
+                const { data: updateData, error: updateError } = await window.supabase
                     .from('circle_leaders')
                     .update(data)
                     .eq('id', this.leaderId)
@@ -524,12 +502,23 @@ export default class CircleLeaderPage {
             } else {
                 // Create new leader
                 console.log('[CircleLeader] Creating new leader');
-                const { data: insertData, error: insertError } = await supabase
+                console.log('[CircleLeader] Data to insert:', data);
+                
+                // Validate required fields before attempting insert
+                const requiredFields = ['name', 'campus', 'acpd', 'status'];
+                const missingFields = requiredFields.filter(field => !data[field] || data[field].trim() === '');
+                
+                if (missingFields.length > 0) {
+                    throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
+                }
+                
+                const { data: insertData, error: insertError } = await window.supabase
                     .from('circle_leaders')
                     .insert([data])
                     .select()
                     .single();
                 
+                console.log('[CircleLeader] Raw insert response:', { insertData, insertError });
                 result = { data: insertData, error: insertError };
                 console.log('[CircleLeader] Insert result:', result);
                 
@@ -537,7 +526,7 @@ export default class CircleLeaderPage {
                 if (result.data && !data.ccb_profile_link) {
                     const defaultCcbLink = `https://valleycreekchurch.ccbchurch.com/goto/groups/${result.data.id}/events`;
                     
-                    const { error: updateError } = await supabase
+                    const { error: updateError } = await window.supabase
                         .from('circle_leaders')
                         .update({ ccb_profile_link: defaultCcbLink })
                         .eq('id', result.data.id);
