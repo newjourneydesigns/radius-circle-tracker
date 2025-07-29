@@ -6,12 +6,16 @@ export default class DashboardPage {
         this.campuses = [];
         this.acpds = [];
         this.statuses = [];
+        this.meetingDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+        this.circleTypes = [];
         this.filters = {
             search: '',
             campus: [],
             acpd: [],
             status: [],
-            eventSummary: ''
+            eventSummary: '',
+            meetingDay: [],
+            circleType: []
         };
         this.sortBy = 'name';
         this.sortOrder = 'asc';
@@ -31,6 +35,8 @@ export default class DashboardPage {
             acpd: this.filters.acpd,
             status: this.filters.status,
             eventSummary: this.filters.eventSummary,
+            meetingDay: this.filters.meetingDay,
+            circleType: this.filters.circleType,
             sortBy: this.sortBy,
             sortOrder: this.sortOrder
         };
@@ -48,6 +54,8 @@ export default class DashboardPage {
                 this.filters.acpd = filterState.acpd || [];
                 this.filters.status = filterState.status || [];
                 this.filters.eventSummary = filterState.eventSummary || '';
+                this.filters.meetingDay = filterState.meetingDay || [];
+                this.filters.circleType = filterState.circleType || [];
                 this.sortBy = filterState.sortBy || 'name';
                 this.sortOrder = filterState.sortOrder || 'asc';
                 console.log('[Dashboard] Filter state loaded:', filterState);
@@ -60,7 +68,9 @@ export default class DashboardPage {
                 campus: [],
                 acpd: [],
                 status: [],
-                eventSummary: ''
+                eventSummary: '',
+                meetingDay: [],
+                circleType: []
             };
             this.sortBy = 'name';
             this.sortOrder = 'asc';
@@ -298,14 +308,7 @@ export default class DashboardPage {
                         </div>
                     </div>
                     <div class="flex flex-wrap gap-2">
-                        <button id="checkAllBtn" onclick="window.dashboard.checkAllEventSummaries()"
-                                class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
-                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                            </svg>
-                            Check All Displayed
-                        </button>
-                        <button id="uncheckAllBtn" onclick="window.dashboard.uncheckAllEventSummaries()"
+                        <button id="uncheckAllBtn" onclick="window.dashboard?.uncheckAllEventSummaries()"
                                 class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
                             <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
@@ -336,7 +339,7 @@ export default class DashboardPage {
                                 <p class="text-sm text-gray-500 dark:text-gray-400">Filter and sort Circle Leaders</p>
                             </div>
                         </div>
-                        <button id="toggleFiltersBtn" onclick="window.dashboard.toggleFilters()"
+                        <button id="toggleFiltersBtn"
                                 class="flex items-center px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus:outline-none">
                             <span id="toggleFiltersText">${filtersVisible ? 'Hide Filters' : 'Edit Filters'}</span>
                             <svg id="toggleFiltersIcon" class="w-4 h-4 ml-2 transform transition-transform ${filtersVisible ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -347,7 +350,7 @@ export default class DashboardPage {
                 </div>
                 <div id="filtersPanel" class="${filtersVisible ? '' : 'hidden'}">
                     <div class="p-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4">
                             <!-- Search -->
                             <div class="sm:col-span-2">
                                 <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
@@ -382,6 +385,24 @@ export default class DashboardPage {
                                 </select>
                             </div>
 
+                            <!-- Meeting Day Filter -->
+                            <div>
+                                <label for="meetingDayFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Meeting Day</label>
+                                <select id="meetingDayFilter" multiple 
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+
+                            <!-- Circle Type Filter -->
+                            <div>
+                                <label for="circleTypeFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Circle Type</label>
+                                <select id="circleTypeFilter" multiple 
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+
                             <!-- Event Summary Filter -->
                             <div>
                                 <label for="eventSummaryFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Summary</label>
@@ -394,7 +415,7 @@ export default class DashboardPage {
                             </div>
 
                             <!-- Sort Options -->
-                            <div class="sm:col-span-2 lg:col-span-1">
+                            <div>
                                 <label for="sortBy" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sort By</label>
                                 <div class="flex space-x-2">
                                     <select id="sortBy" 
@@ -494,6 +515,8 @@ export default class DashboardPage {
         const campusFilter = document.getElementById('campusFilter');
         const acpdFilter = document.getElementById('acpdFilter');
         const statusFilter = document.getElementById('statusFilter');
+        const meetingDayFilter = document.getElementById('meetingDayFilter');
+        const circleTypeFilter = document.getElementById('circleTypeFilter');
         const eventSummaryFilter = document.getElementById('eventSummaryFilter');
         const sortBySelect = document.getElementById('sortBy');
         const sortOrderBtn = document.getElementById('sortOrderBtn');
@@ -512,6 +535,18 @@ export default class DashboardPage {
 
         statusFilter?.addEventListener('change', () => {
             this.filters.status = Array.from(statusFilter.selectedOptions).map(option => option.value);
+            this.applyFilters();
+            this.saveFilterState();
+        });
+
+        meetingDayFilter?.addEventListener('change', () => {
+            this.filters.meetingDay = Array.from(meetingDayFilter.selectedOptions).map(option => option.value);
+            this.applyFilters();
+            this.saveFilterState();
+        });
+
+        circleTypeFilter?.addEventListener('change', () => {
+            this.filters.circleType = Array.from(circleTypeFilter.selectedOptions).map(option => option.value);
             this.applyFilters();
             this.saveFilterState();
         });
@@ -657,13 +692,15 @@ export default class DashboardPage {
                 console.log('[Dashboard] event_summary_received exists:', 'event_summary_received' in firstLeader);
             }
 
-            // Load unique campuses and ACPDs for filters
+            // Load unique campuses, ACPDs, statuses, and circle types for filters
             this.campuses = [...new Set(leaders?.map(l => l.campus).filter(Boolean))];
             this.acpds = [...new Set(leaders?.map(l => l.acpd).filter(Boolean))];
             this.statuses = [...new Set(leaders?.map(l => l.status).filter(Boolean))];
+            this.circleTypes = [...new Set(leaders?.map(l => l.type).filter(Boolean))];
             console.log('[Dashboard] Extracted campuses:', this.campuses);
             console.log('[Dashboard] Extracted ACPDs:', this.acpds);
             console.log('[Dashboard] Extracted statuses:', this.statuses);
+            console.log('[Dashboard] Extracted circle types:', this.circleTypes);
 
             // Populate filter options
             this.populateFilterOptions();
@@ -690,6 +727,8 @@ export default class DashboardPage {
         const campusFilter = document.getElementById('campusFilter');
         const acpdFilter = document.getElementById('acpdFilter');
         const statusFilter = document.getElementById('statusFilter');
+        const meetingDayFilter = document.getElementById('meetingDayFilter');
+        const circleTypeFilter = document.getElementById('circleTypeFilter');
 
         if (campusFilter) {
             campusFilter.innerHTML = this.campuses.map(campus => 
@@ -706,6 +745,18 @@ export default class DashboardPage {
         if (statusFilter) {
             statusFilter.innerHTML = this.statuses.map(status => 
                 `<option value="${status}">${status}</option>`
+            ).join('');
+        }
+
+        if (meetingDayFilter) {
+            meetingDayFilter.innerHTML = this.meetingDays.map(day => 
+                `<option value="${day}">${day}</option>`
+            ).join('');
+        }
+
+        if (circleTypeFilter) {
+            circleTypeFilter.innerHTML = this.circleTypes.map(type => 
+                `<option value="${type}">${type}</option>`
             ).join('');
         }
     }
@@ -738,6 +789,22 @@ export default class DashboardPage {
         if (statusFilter) {
             Array.from(statusFilter.options).forEach(option => {
                 option.selected = this.filters.status.includes(option.value);
+            });
+        }
+
+        // Restore meeting day filter
+        const meetingDayFilter = document.getElementById('meetingDayFilter');
+        if (meetingDayFilter) {
+            Array.from(meetingDayFilter.options).forEach(option => {
+                option.selected = this.filters.meetingDay.includes(option.value);
+            });
+        }
+
+        // Restore circle type filter
+        const circleTypeFilter = document.getElementById('circleTypeFilter');
+        if (circleTypeFilter) {
+            Array.from(circleTypeFilter.options).forEach(option => {
+                option.selected = this.filters.circleType.includes(option.value);
             });
         }
 
@@ -799,6 +866,20 @@ export default class DashboardPage {
         if (this.filters.status.length > 0) {
             filtered = filtered.filter(leader => 
                 this.filters.status.includes(leader.status)
+            );
+        }
+
+        // Meeting Day filter
+        if (this.filters.meetingDay.length > 0) {
+            filtered = filtered.filter(leader => 
+                this.filters.meetingDay.includes(leader.day)
+            );
+        }
+
+        // Circle Type filter
+        if (this.filters.circleType.length > 0) {
+            filtered = filtered.filter(leader => 
+                this.filters.circleType.includes(leader.type)
             );
         }
 
