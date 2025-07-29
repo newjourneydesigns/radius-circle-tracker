@@ -478,59 +478,57 @@ export default class CircleLeaderPage {
 
         // Ensure supabase is available
         if (!window.supabase) {
+            console.error('[CircleLeader] Supabase client is not initialized');
             throw new Error('Supabase client not available');
         }
 
         try {
             let result;
-            
+
             if (this.isEditing) {
-                // Update existing leader
                 console.log('[CircleLeader] Updating leader with ID:', this.leaderId);
                 console.log('[CircleLeader] Update data:', data);
-                
+
                 const { data: updateData, error: updateError } = await window.supabase
                     .from('circle_leaders')
                     .update(data)
                     .eq('id', this.leaderId)
                     .select()
                     .single();
-                
+
                 console.log('[CircleLeader] Raw update response:', { updateData, updateError });
                 result = { data: updateData, error: updateError };
                 console.log('[CircleLeader] Update result:', result);
             } else {
-                // Create new leader
                 console.log('[CircleLeader] Creating new leader');
                 console.log('[CircleLeader] Data to insert:', data);
-                
-                // Validate required fields before attempting insert
+
                 const requiredFields = ['name', 'campus', 'acpd', 'status'];
                 const missingFields = requiredFields.filter(field => !data[field] || data[field].trim() === '');
-                
+
                 if (missingFields.length > 0) {
+                    console.error('[CircleLeader] Missing required fields:', missingFields);
                     throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
                 }
-                
+
                 const { data: insertData, error: insertError } = await window.supabase
                     .from('circle_leaders')
                     .insert([data])
                     .select()
                     .single();
-                
+
                 console.log('[CircleLeader] Raw insert response:', { insertData, insertError });
                 result = { data: insertData, error: insertError };
                 console.log('[CircleLeader] Insert result:', result);
-                
-                // If CCB link is empty and we have a new leader ID, generate the default CCB link
+
                 if (result.data && !data.ccb_profile_link) {
                     const defaultCcbLink = `https://valleycreekchurch.ccbchurch.com/goto/groups/${result.data.id}/events`;
-                    
+
                     const { error: updateError } = await window.supabase
                         .from('circle_leaders')
                         .update({ ccb_profile_link: defaultCcbLink })
                         .eq('id', result.data.id);
-                        
+
                     if (updateError) {
                         console.warn('[CircleLeader] Could not update CCB link:', updateError);
                     } else {
@@ -549,43 +547,27 @@ export default class CircleLeaderPage {
                 'success'
             );
 
-            // Reset submission flag
             this.isSubmitting = false;
-
-            // Navigate back to dashboard
-            console.log('[CircleLeader] Navigating to dashboard');
             window.router.navigate('/dashboard');
-
         } catch (error) {
             console.error('[CircleLeader] Error saving circle leader:', error);
-            console.error('[CircleLeader] Error details:', {
-                message: error.message,
-                details: error.details,
-                hint: error.hint,
-                code: error.code
-            });
-            
-            // Reset submission flag on error
             this.isSubmitting = false;
-            
-            // Show more detailed error message
             let errorMessage = `Error ${this.isEditing ? 'updating' : 'creating'} circle leader: `;
-            
+
             if (error.message) {
                 errorMessage += error.message;
             } else {
                 errorMessage += 'Unknown error occurred';
             }
-            
-            // Add additional details if available
+
             if (error.details) {
                 errorMessage += ` (${error.details})`;
             }
-            
+
             if (error.hint) {
                 errorMessage += ` Hint: ${error.hint}`;
             }
-            
+
             window.utils.showNotification(errorMessage, 'error');
         }
     }
