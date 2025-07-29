@@ -110,31 +110,49 @@ export default class DashboardPage {
                     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Try adjusting your filters or search terms.</p>
                 </div>
 
-                <!-- Phone Action Modal -->
-                <div id="phoneModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+                <!-- Contact Modal -->
+                <div id="contactModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
                     <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
                         <div class="mt-3">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-4">Contact Options</h3>
-                            <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">
-                                Phone: <span id="modalPhoneNumber" class="font-medium text-gray-900 dark:text-white"></span>
-                            </p>
-                            <div class="flex flex-col space-y-3">
-                                <button id="callButton" 
-                                        class="w-full bg-blue-600 text-white py-2 px-4 rounded hover:bg-blue-700 flex items-center justify-center">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Contact Options</h3>
+                                <button onclick="window.dashboard?.closeContactModal()" 
+                                        class="text-gray-400 hover:text-gray-600 dark:hover:text-gray-300">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                                    </svg>
+                                </button>
+                            </div>
+                            <div class="text-center mb-6">
+                                <p class="text-gray-600 dark:text-gray-300">
+                                    Contact <span id="contactModalName" class="font-semibold"></span>
+                                </p>
+                                <p id="contactModalInfo" class="text-sm text-gray-500 dark:text-gray-400 mt-1"></p>
+                            </div>
+                            <div class="space-y-3">
+                                <button id="callButton" style="display: none;"
+                                        class="w-full flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-green-700 bg-green-100 hover:bg-green-200 dark:bg-green-900 dark:text-green-300 dark:hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-green-500">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
                                     </svg>
                                     Call
                                 </button>
-                                <button id="textButton" 
-                                        class="w-full bg-green-600 text-white py-2 px-4 rounded hover:bg-green-700 flex items-center justify-center">
-                                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                <button id="textButton" style="display: none;"
+                                        class="w-full flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-3.582 8-8 8a8.13 8.13 0 01-1.318-.107l-3.682.773v-2.089A8.002 8.002 0 013 12C3 7.582 6.582 4 12 4s9 3.582 9 8z"></path>
                                     </svg>
                                     Text
                                 </button>
-                                <button onclick="window.dashboard.closePhoneModal()" 
-                                        class="w-full bg-gray-600 text-white py-2 px-4 rounded hover:bg-gray-700">
+                                <button id="emailButton" style="display: none;"
+                                        class="w-full flex items-center justify-center px-4 py-3 border border-transparent text-sm font-medium rounded-md text-purple-700 bg-purple-100 hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-300 dark:hover:bg-purple-800 focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 7.89a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                    </svg>
+                                    Email
+                                </button>
+                                <button onclick="window.dashboard?.closeContactModal()" 
+                                        class="w-full flex items-center justify-center px-4 py-3 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     Cancel
                                 </button>
                             </div>
@@ -731,31 +749,31 @@ export default class DashboardPage {
         const circleTypeFilter = document.getElementById('circleTypeFilter');
 
         if (campusFilter) {
-            campusFilter.innerHTML = this.campuses.map(campus => 
+            campusFilter.innerHTML = '<option value="">All</option>' + this.campuses.map(campus => 
                 `<option value="${campus}">${campus}</option>`
             ).join('');
         }
 
         if (acpdFilter) {
-            acpdFilter.innerHTML = this.acpds.map(acpd => 
+            acpdFilter.innerHTML = '<option value="">All</option>' + this.acpds.map(acpd => 
                 `<option value="${acpd}">${acpd}</option>`
             ).join('');
         }
 
         if (statusFilter) {
-            statusFilter.innerHTML = this.statuses.map(status => 
+            statusFilter.innerHTML = '<option value="">All</option>' + this.statuses.map(status => 
                 `<option value="${status}">${status}</option>`
             ).join('');
         }
 
         if (meetingDayFilter) {
-            meetingDayFilter.innerHTML = this.meetingDays.map(day => 
+            meetingDayFilter.innerHTML = '<option value="">All</option>' + this.meetingDays.map(day => 
                 `<option value="${day}">${day}</option>`
             ).join('');
         }
 
         if (circleTypeFilter) {
-            circleTypeFilter.innerHTML = this.circleTypes.map(type => 
+            circleTypeFilter.innerHTML = '<option value="">All</option>' + this.circleTypes.map(type => 
                 `<option value="${type}">${type}</option>`
             ).join('');
         }
@@ -1013,24 +1031,13 @@ export default class DashboardPage {
                         <div class="mb-4">
                             <p class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Contact</p>
                             <div class="flex space-x-2">
-                                ${leader.email ? `
-                                    <button onclick="window.dashboard.openEmail('${leader.email}')" 
-                                            class="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-2 py-1 rounded hover:bg-blue-200 dark:hover:bg-blue-800 flex items-center">
-                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207"></path>
-                                        </svg>
-                                        Email
-                                    </button>
-                                ` : ''}
-                                ${leader.phone ? `
-                                    <button onclick="window.dashboard.openPhoneModal('${leader.phone}')" 
-                                            class="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300 px-2 py-1 rounded hover:bg-green-200 dark:hover:bg-green-800 flex items-center">
-                                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                                        </svg>
-                                        Phone
-                                    </button>
-                                ` : ''}
+                                <button onclick="window.dashboard?.openContactModal('${leader.id}', '${leader.name}', '${leader.email || ''}', '${leader.phone || ''}')" 
+                                        class="text-xs bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300 px-3 py-1 rounded hover:bg-blue-200 dark:hover:bg-blue-800 flex items-center">
+                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                    </svg>
+                                    Contact
+                                </button>
                             </div>
                         </div>
                     ` : ''}
@@ -1311,16 +1318,16 @@ export default class DashboardPage {
             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                 <thead class="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        <th class="px-3 py-3 sm:px-6 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Circle Leader
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        <th class="px-3 py-3 sm:px-6 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden sm:table-cell">
                             Time
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        <th class="px-3 py-3 sm:px-6 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider hidden md:table-cell">
                             Frequency
                         </th>
-                        <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                        <th class="px-3 py-3 sm:px-6 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                             Contact
                         </th>
                     </tr>
@@ -1337,45 +1344,33 @@ export default class DashboardPage {
         
         return `
             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-3 py-4 sm:px-6 whitespace-nowrap">
                     <div class="flex items-center">
                         <div class="text-sm font-medium">
-                            <a href="#/profile/${leader.id}" 
-                               class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 hover:underline cursor-pointer">
+                            <button onclick="window.router.navigate('/circle-leader/${leader.id}')" 
+                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 hover:underline cursor-pointer text-left">
                                 ${leader.name || 'Unnamed Leader'}
-                            </a>
+                            </button>
                         </div>
                     </div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-3 py-4 sm:px-6 whitespace-nowrap hidden sm:table-cell">
                     <div class="text-sm text-gray-900 dark:text-white">${meetingTime}</div>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap">
+                <td class="px-3 py-4 sm:px-6 whitespace-nowrap hidden md:table-cell">
                     <span class="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200">
                         ${leader.frequency || 'Not set'}
                     </span>
                 </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                    <div class="flex space-x-2">
-                        ${leader.email ? `
-                            <button onclick="window.dashboard?.openEmail('${leader.email}')" 
-                                    class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300"
-                                    title="Send Email">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 7.89a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                                </svg>
-                            </button>
-                        ` : ''}
-                        ${leader.phone ? `
-                            <button onclick="window.dashboard?.openPhoneModal('${leader.phone}')" 
-                                    class="text-green-600 hover:text-green-900 dark:text-green-400 dark:hover:text-green-300"
-                                    title="Call or Text">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
-                                </svg>
-                            </button>
-                        ` : ''}
-                    </div>
+                <td class="px-3 py-4 sm:px-6 whitespace-nowrap text-sm font-medium">
+                    ${(leader.email || leader.phone) ? `
+                        <button onclick="window.dashboard?.openContactModal('${leader.id}', '${leader.name}', '${leader.email || ''}', '${leader.phone || ''}')" 
+                                class="inline-flex items-center px-3 py-1 border border-transparent text-xs font-medium rounded text-blue-600 bg-blue-100 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            Contact
+                        </button>
+                    ` : `
+                        <span class="text-gray-400 dark:text-gray-500 text-xs">No contact info</span>
+                    `}
                 </td>
             </tr>
         `;
@@ -1408,43 +1403,66 @@ export default class DashboardPage {
         }
     }
 
-    openEmail(email) {
-        if (email) {
-            window.open(`mailto:${email}`, '_blank');
-        }
-    }
-
-    openPhoneModal(phoneNumber) {
-        if (!phoneNumber) return;
-        
-        const modal = document.getElementById('phoneModal');
-        const phoneNumberSpan = document.getElementById('modalPhoneNumber');
+    openContactModal(leaderId, name, email, phone) {
+        const modal = document.getElementById('contactModal');
+        const nameSpan = document.getElementById('contactModalName');
+        const infoP = document.getElementById('contactModalInfo');
         const callButton = document.getElementById('callButton');
         const textButton = document.getElementById('textButton');
+        const emailButton = document.getElementById('emailButton');
         
-        if (modal && phoneNumberSpan) {
-            phoneNumberSpan.textContent = phoneNumber;
+        if (modal && nameSpan) {
+            nameSpan.textContent = name || 'Circle Leader';
+            
+            // Build info text
+            let info = [];
+            if (phone) info.push(`Phone: ${phone}`);
+            if (email) info.push(`Email: ${email}`);
+            infoP.textContent = info.join(' • ');
+            
             modal.classList.remove('hidden');
             
-            // Set up call and text button handlers
+            // Show/hide buttons based on available contact info
             if (callButton) {
-                callButton.onclick = () => {
-                    window.open(`tel:${phoneNumber}`, '_self');
-                    this.closePhoneModal();
-                };
+                if (phone) {
+                    callButton.style.display = 'flex';
+                    callButton.onclick = () => {
+                        window.open(`tel:${phone}`, '_self');
+                        this.closeContactModal();
+                    };
+                } else {
+                    callButton.style.display = 'none';
+                }
             }
             
             if (textButton) {
-                textButton.onclick = () => {
-                    window.open(`sms:${phoneNumber}`, '_self');
-                    this.closePhoneModal();
-                };
+                if (phone) {
+                    textButton.style.display = 'flex';
+                    textButton.onclick = () => {
+                        window.open(`sms:${phone}`, '_self');
+                        this.closeContactModal();
+                    };
+                } else {
+                    textButton.style.display = 'none';
+                }
+            }
+            
+            if (emailButton) {
+                if (email) {
+                    emailButton.style.display = 'flex';
+                    emailButton.onclick = () => {
+                        window.open(`mailto:${email}`, '_blank');
+                        this.closeContactModal();
+                    };
+                } else {
+                    emailButton.style.display = 'none';
+                }
             }
         }
     }
 
-    closePhoneModal() {
-        const modal = document.getElementById('phoneModal');
+    closeContactModal() {
+        const modal = document.getElementById('contactModal');
         if (modal) {
             modal.classList.add('hidden');
         }
