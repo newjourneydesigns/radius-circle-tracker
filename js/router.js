@@ -132,8 +132,8 @@ class Router {
                     pageModule = await import('/pages/org-settings.js');
                     break;
                 case '/circle-leader/new':
-                    console.log('[Router] Loading ADD circle leader page');
-                    pageModule = await import('/pages/add-circle-leader.js?v=' + Date.now());
+                    console.log('[Router] Loading circle leader page for NEW');
+                    pageModule = await import('/pages/circle-leader.js?v=' + Date.now());
                     break;
                 default:
                     // Check if it's a circle leader profile page or edit page

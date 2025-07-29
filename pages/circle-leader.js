@@ -457,16 +457,22 @@ export default class CircleLeaderPage {
             'status': allData.status || 'invited' // Default status to invited
         };
 
-        // Filter out null/undefined values but keep empty strings for optional fields
+        // Build final data object - only include non-null values
         const data = {};
-        for (let [key, value] of Object.entries(validFields)) {
-            if (value !== null && value !== undefined) {
-                // For required fields, don't save empty strings
-                if (['name', 'email', 'campus', 'acpd', 'status'].includes(key) && value === '') {
-                    continue; // Skip empty required fields
-                }
-                // For optional fields, save even if empty string
+        Object.keys(validFields).forEach(key => {
+            const value = validFields[key];
+            if (value !== null && value !== undefined && value !== '') {
                 data[key] = value;
+            }
+        });
+        
+        // Ensure required fields are present for new records
+        if (!this.isEditing) {
+            const requiredFields = ['name', 'email', 'campus', 'acpd', 'status'];
+            for (const field of requiredFields) {
+                if (!data[field]) {
+                    throw new Error(`${field} is required`);
+                }
             }
         }
 
@@ -500,29 +506,32 @@ export default class CircleLeaderPage {
                 result = { data: updateData, error: updateError };
                 console.log('[CircleLeader] Update result:', result);
             } else {
+                // Create new leader
                 console.log('[CircleLeader] Creating new leader');
                 console.log('[CircleLeader] Data to insert:', data);
-
-                const requiredFields = ['name', 'campus', 'acpd', 'status'];
-                const missingFields = requiredFields.filter(field => !data[field] || data[field].trim() === '');
-
-                if (missingFields.length > 0) {
-                    console.error('[CircleLeader] Missing required fields:', missingFields);
-                    throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
-                }
 
                 console.log('[CircleLeader] About to call Supabase insert...');
                 const { data: insertData, error: insertError } = await window.supabase
                     .from('circle_leaders')
-                    .insert([data])
-                    .select()
-                    .single();
+                    .insert(data)
+                    .select();
 
                 console.log('[CircleLeader] Supabase insert completed');
                 console.log('[CircleLeader] Raw insert response:', { insertData, insertError });
-                result = { data: insertData, error: insertError };
-                console.log('[CircleLeader] Insert result:', result);
+                
+                if (insertError) {
+                    console.error('[CircleLeader] Insert error:', insertError);
+                    throw insertError;
+                }
+                
+                if (insertData && insertData.length > 0) {
+                    result = { data: insertData[0], error: null };
+                    console.log('[CircleLeader] Insert successful:', result.data);
+                } else {
+                    throw new Error('No data returned from insert');
+                }
 
+                // Generate default CCB link if not provided
                 if (result.data && !data.ccb_profile_link) {
                     const defaultCcbLink = `https://valleycreekchurch.ccbchurch.com/goto/groups/${result.data.id}/events`;
 
@@ -544,33 +553,48 @@ export default class CircleLeaderPage {
                 throw result.error;
             }
 
-            window.utils.showNotification(
-                `Circle leader ${this.isEditing ? 'updated' : 'created'} successfully!`,
-                'success'
-            );
+            console.log('[CircleLeader] Operation successful, showing notification');
+            if (window.utils && window.utils.showNotification) {
+                window.utils.showNotification(
+                    `Circle leader ${this.isEditing ? 'updated' : 'created'} successfully!`,
+                    'success'
+                );
+            } else {
+                alert(`Circle leader ${this.isEditing ? 'updated' : 'created'} successfully!`);
+            }
 
             this.isSubmitting = false;
+            console.log('[CircleLeader] Navigating to dashboard');
             window.router.navigate('/dashboard');
         } catch (error) {
             console.error('[CircleLeader] Error saving circle leader:', error);
+            console.error('[CircleLeader] Error stack:', error.stack);
             this.isSubmitting = false;
+            
             let errorMessage = `Error ${this.isEditing ? 'updating' : 'creating'} circle leader: `;
-
+            
             if (error.message) {
                 errorMessage += error.message;
             } else {
                 errorMessage += 'Unknown error occurred';
             }
-
+            
+            // Add additional details if available
             if (error.details) {
                 errorMessage += ` (${error.details})`;
             }
-
+            
             if (error.hint) {
                 errorMessage += ` Hint: ${error.hint}`;
             }
-
-            window.utils.showNotification(errorMessage, 'error');
+            
+            console.error('[CircleLeader] Final error message:', errorMessage);
+            
+            if (window.utils && window.utils.showNotification) {
+                window.utils.showNotification(errorMessage, 'error');
+            } else {
+                alert(errorMessage);
+            }
         }
     }
 
