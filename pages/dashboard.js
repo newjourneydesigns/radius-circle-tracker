@@ -438,6 +438,36 @@ export default class DashboardPage {
             this.circleLeaders = leaders || [];
             console.log('[Dashboard] Loaded', this.circleLeaders.length, 'circle leaders');
             
+            // Load last note for each circle leader
+            if (this.circleLeaders.length > 0) {
+                console.log('[Dashboard] Loading last notes for circle leaders...');
+                
+                const notesPromise = supabase
+                    .from('notes')
+                    .select('circle_leader_id, content, created_at')
+                    .order('created_at', { ascending: false });
+                
+                const { data: notes, error: notesError } = await Promise.race([notesPromise, timeoutPromise]);
+                
+                if (!notesError && notes) {
+                    // Group notes by circle leader ID and get the most recent for each
+                    const notesByLeader = {};
+                    notes.forEach(note => {
+                        if (!notesByLeader[note.circle_leader_id]) {
+                            notesByLeader[note.circle_leader_id] = note;
+                        }
+                    });
+                    
+                    // Add last note to each circle leader
+                    this.circleLeaders = this.circleLeaders.map(leader => ({
+                        ...leader,
+                        last_note: notesByLeader[leader.id]
+                    }));
+                    
+                    console.log('[Dashboard] Added last notes to circle leaders');
+                }
+            }
+            
             // Check if event_summary_received column exists in the data
             if (this.circleLeaders.length > 0) {
                 const firstLeader = this.circleLeaders[0];
@@ -727,11 +757,14 @@ export default class DashboardPage {
                         </div>
                     ` : ''}
 
-                    <!-- Last Communication -->
+                    <!-- Last Note -->
                     <div class="mb-4">
-                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Last Communication</p>
+                        <p class="text-sm font-medium text-gray-700 dark:text-gray-300">Last Note</p>
                         <p class="text-sm text-gray-500 dark:text-gray-400">
-                            ${leader.last_communication_date ? window.utils.getRelativeTime(leader.last_communication_date) : 'No recent communication'}
+                            ${leader.last_note ? 
+                                `<span class="block truncate">${leader.last_note.content?.replace(/<[^>]*>/g, '').substring(0, 100)}${leader.last_note.content?.length > 100 ? '...' : ''}</span>` : 
+                                'No notes yet'
+                            }
                         </p>
                     </div>
 
