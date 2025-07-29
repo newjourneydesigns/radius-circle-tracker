@@ -511,12 +511,14 @@ export default class CircleLeaderPage {
                     throw new Error(`Missing required fields: ${missingFields.join(', ')}`);
                 }
 
+                console.log('[CircleLeader] About to call Supabase insert...');
                 const { data: insertData, error: insertError } = await window.supabase
                     .from('circle_leaders')
                     .insert([data])
                     .select()
                     .single();
 
+                console.log('[CircleLeader] Supabase insert completed');
                 console.log('[CircleLeader] Raw insert response:', { insertData, insertError });
                 result = { data: insertData, error: insertError };
                 console.log('[CircleLeader] Insert result:', result);
