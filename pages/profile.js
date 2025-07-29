@@ -211,62 +211,25 @@ export default class ProfilePage {
     renderActionForms() {
         return `
             <!-- Action Forms (Admin Only) -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-                <!-- Update Communication -->
+            <div class="grid grid-cols-1 gap-6 mb-6">
+                <!-- Notes Section -->
                 <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
                     <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Update Last Communication</h3>
+                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Add Note</h3>
                     </div>
                     <div class="px-6 py-4">
-                        <form id="communicationForm" class="space-y-4">
+                        <form id="noteForm" class="space-y-4">
                             <div>
-                                <label for="commDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Date</label>
-                                <input type="date" id="commDate" required
-                                       class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            </div>
-                            <div>
-                                <label for="commType" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Type</label>
-                                <select id="commType" required
-                                        class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                                    <option value="">Select type...</option>
-                                    ${APP_CONFIG.communicationTypes.map(type => `<option value="${type}">${type}</option>`).join('')}
-                                </select>
-                            </div>
-                            <div>
-                                <label for="commNote" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Note</label>
-                                <div id="commNoteEditor" class="mt-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 min-h-[100px] p-3 focus-within:ring-primary-500 focus-within:border-primary-500"
+                                <label for="freeformNote" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Note</label>
+                                <div id="freeformNoteEditor" class="mt-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 min-h-[100px] p-3 focus-within:ring-primary-500 focus-within:border-primary-500"
                                      contenteditable="true" 
-                                     data-placeholder="Add communication notes..."></div>
+                                     data-placeholder="Add freeform notes..."></div>
                             </div>
                             <button type="submit" 
-                                    class="w-full bg-primary-600 text-white py-2 px-4 rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500">
-                                Update Communication
+                                    class="w-full bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500">
+                                Add Note
                             </button>
                         </form>
-                    </div>
-                </div>
-
-                <!-- Notes Section -->
-                <div class="space-y-6">
-                    <!-- Add Note -->
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
-                        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Add Note</h3>
-                        </div>
-                        <div class="px-6 py-4">
-                            <form id="noteForm" class="space-y-4">
-                                <div>
-                                    <label for="freeformNote" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Note</label>
-                                    <div id="freeformNoteEditor" class="mt-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 min-h-[100px] p-3 focus-within:ring-primary-500 focus-within:border-primary-500"
-                                         contenteditable="true" 
-                                         data-placeholder="Add freeform notes..."></div>
-                                </div>
-                                <button type="submit" 
-                                        class="w-full bg-gray-600 text-white py-2 px-4 rounded-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500">
-                                    Add Note
-                                </button>
-                            </form>
-                        </div>
                     </div>
                 </div>
             </div>
@@ -402,12 +365,6 @@ export default class ProfilePage {
     renderProfile() {
         const profileContent = document.getElementById('profileContent');
         profileContent.innerHTML = this.renderProfileContent();
-        
-        // Set today's date as default
-        const today = new Date().toISOString().split('T')[0];
-        const commDate = document.getElementById('commDate');
-        
-        if (commDate) commDate.value = today;
     }
 
     setupEventListeners() {
@@ -425,10 +382,6 @@ export default class ProfilePage {
             }
         });
 
-        // Communication form
-        const communicationForm = document.getElementById('communicationForm');
-        communicationForm?.addEventListener('submit', (e) => this.handleCommunicationSubmit(e));
-
         // Note form
         const noteForm = document.getElementById('noteForm');
         noteForm?.addEventListener('submit', (e) => this.handleNoteSubmit(e));
@@ -438,7 +391,7 @@ export default class ProfilePage {
     }
 
     setupRichTextEditors() {
-        const editors = ['commNoteEditor', 'freeformNoteEditor'];
+        const editors = ['freeformNoteEditor'];
         
         editors.forEach(editorId => {
             const editor = document.getElementById(editorId);
@@ -471,51 +424,6 @@ export default class ProfilePage {
 
             updatePlaceholder();
         });
-    }
-
-    async handleCommunicationSubmit(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(e.target);
-        const commDate = formData.get('commDate');
-        const commType = formData.get('commType');
-        const commNote = document.getElementById('commNoteEditor').innerHTML;
-
-        try {
-            // Save communication
-            const { error: commError } = await supabase
-                .from('communications')
-                .insert([{
-                    circle_leader_id: this.leaderId,
-                    communication_date: commDate,
-                    communication_type: commType,
-                    note: commNote,
-                    created_at: new Date().toISOString()
-                }]);
-
-            if (commError) throw commError;
-
-            // Update last communication date on leader
-            const { error: updateError } = await supabase
-                .from('circle_leaders')
-                .update({ last_communication_date: commDate })
-                .eq('id', this.leaderId);
-
-            if (updateError) throw updateError;
-
-            window.utils.showNotification('Communication updated successfully', 'success');
-            
-            // Reset form and reload data
-            e.target.reset();
-            document.getElementById('commNoteEditor').innerHTML = '';
-            await this.loadLeaderData();
-            this.renderProfile();
-            this.setupEventListeners();
-
-        } catch (error) {
-            console.error('Error saving communication:', error);
-            window.utils.showNotification('Error saving communication', 'error');
-        }
     }
 
     async handleNoteSubmit(e) {
