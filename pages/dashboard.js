@@ -14,7 +14,8 @@ export default class DashboardPage {
             acpd: [],
             status: [],
             meetingDay: [],
-            circleType: []
+            circleType: [],
+            eventSummary: 'all' // 'all', 'received', 'not_received'
         };
         this.isLoading = false; // Prevent multiple simultaneous loads
         
@@ -32,7 +33,8 @@ export default class DashboardPage {
             acpd: this.filters.acpd,
             status: this.filters.status,
             meetingDay: this.filters.meetingDay,
-            circleType: this.filters.circleType
+            circleType: this.filters.circleType,
+            eventSummary: this.filters.eventSummary
         };
         localStorage.setItem('radiusDashboardFilters', JSON.stringify(filterState));
         console.log('[Dashboard] Filter state saved:', filterState);
@@ -49,6 +51,8 @@ export default class DashboardPage {
                 this.filters.status = filterState.status || [];
                 this.filters.meetingDay = filterState.meetingDay || [];
                 this.filters.circleType = filterState.circleType || [];
+                this.filters.eventSummary = filterState.eventSummary || 'all';
+                this.filters.circleType = filterState.circleType || [];
                 console.log('[Dashboard] Filter state loaded:', filterState);
             }
         } catch (error) {
@@ -60,7 +64,8 @@ export default class DashboardPage {
                 acpd: [],
                 status: [],
                 meetingDay: [],
-                circleType: []
+                circleType: [],
+                eventSummary: 'all'
             };
         }
     }
@@ -77,6 +82,9 @@ export default class DashboardPage {
 
                 <!-- Collapsible Filters Panel -->
                 ${this.renderCollapsibleFilters()}
+
+                <!-- Event Summary Progress -->
+                ${this.renderEventSummaryProgress()}
 
                 <!-- Today's Circles Table -->
                 ${this.renderTodayCircles()}
@@ -353,7 +361,54 @@ export default class DashboardPage {
                                 </select>
                             </div>
 
+                            <!-- Event Summary Filter -->
+                            <div>
+                                <label for="eventSummaryFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Summary</label>
+                                <select id="eventSummaryFilter"
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="all">All</option>
+                                    <option value="received">Summary Received</option>
+                                    <option value="not_received">Summary Not Received</option>
+                                </select>
+                            </div>
+
                         </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderEventSummaryProgress() {
+        return `
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-md flex items-center justify-center mr-3">
+                                <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Event Summaries Received</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                    <span id="progressText">0 out of 0 received</span>
+                                </p>
+                            </div>
+                        </div>
+                        <button id="resetCheckboxesBtn"
+                                class="flex items-center px-4 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900 rounded-md border border-red-300 dark:border-red-600 focus:outline-none focus:ring-2 focus:ring-red-500">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            Reset Checkboxes
+                        </button>
+                    </div>
+                </div>
+                <div class="px-6 py-4">
+                    <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                        <div id="progressBar" class="bg-red-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
                     </div>
                 </div>
             </div>
@@ -393,6 +448,11 @@ export default class DashboardPage {
         await this.loadData();
         this.renderCircleLeaders();
         this.updateStats();
+        
+        // Use setTimeout to ensure all DOM elements are ready
+        setTimeout(() => {
+            this.refreshEventSummaryProgress();
+        }, 100);
         
         // Ensure global reference is still set after initialization
         window.dashboard = this;
@@ -472,6 +532,20 @@ export default class DashboardPage {
             this.filters.circleType = Array.from(circleTypeFilter.selectedOptions).map(option => option.value);
             this.applyFilters();
             this.saveFilterState();
+        });
+
+        // Event Summary Filter
+        const eventSummaryFilter = document.getElementById('eventSummaryFilter');
+        eventSummaryFilter?.addEventListener('change', () => {
+            this.filters.eventSummary = eventSummaryFilter.value;
+            this.applyFilters();
+            this.saveFilterState();
+        });
+
+        // Reset Checkboxes Button
+        const resetCheckboxesBtn = document.getElementById('resetCheckboxesBtn');
+        resetCheckboxesBtn?.addEventListener('click', () => {
+            this.resetEventSummaryCheckboxes();
         });
 
         // Phone modal click outside handler
@@ -739,6 +813,12 @@ export default class DashboardPage {
             });
         }
 
+        // Restore event summary filter
+        const eventSummaryFilter = document.getElementById('eventSummaryFilter');
+        if (eventSummaryFilter) {
+            eventSummaryFilter.value = this.filters.eventSummary;
+        }
+
     }
 
     applyFilters() {
@@ -787,6 +867,13 @@ export default class DashboardPage {
             );
         }
 
+        // Event Summary filter
+        if (this.filters.eventSummary === 'received') {
+            filtered = filtered.filter(leader => leader.event_summary_received === true);
+        } else if (this.filters.eventSummary === 'not_received') {
+            filtered = filtered.filter(leader => leader.event_summary_received !== true);
+        }
+
         // Default sort by name
         filtered.sort((a, b) => {
             const aName = a.name || '';
@@ -797,6 +884,11 @@ export default class DashboardPage {
         this.filteredLeaders = filtered;
         this.renderCircleLeaders();
         this.updateTodayCirclesTable();
+        
+        // Use setTimeout to ensure DOM elements are rendered before updating progress
+        setTimeout(() => {
+            this.updateEventSummaryProgress();
+        }, 0);
         
         // Safely ensure global reference without triggering events
         this.ensureGlobalReference();
@@ -876,6 +968,20 @@ export default class DashboardPage {
                                 'No notes yet'
                             }
                         </p>
+                    </div>
+
+                    <!-- Event Summary Checkbox -->
+                    <div class="mb-4">
+                        <div class="flex items-center">
+                            <input type="checkbox" 
+                                   id="eventSummary_${leader.id}" 
+                                   ${leader.event_summary_received ? 'checked' : ''}
+                                   onchange="window.dashboard?.toggleEventSummary('${leader.id}', this.checked)"
+                                   class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 dark:border-gray-600 rounded dark:bg-gray-700">
+                            <label for="eventSummary_${leader.id}" class="ml-2 block text-sm text-gray-700 dark:text-gray-300">
+                                Event Summary
+                            </label>
+                        </div>
                     </div>
 
                     <!-- Links -->
@@ -1193,6 +1299,205 @@ export default class DashboardPage {
             console.log('[Dashboard] Setting global reference');
             window.dashboard = this;
         }
+    }
+
+    async toggleEventSummary(leaderId, isChecked) {
+        console.log('[Dashboard] Toggling event summary for leader:', leaderId, 'to:', isChecked);
+        
+        try {
+            // Validate authentication state
+            if (!window.authManager || !window.authManager.isAuthenticated()) {
+                console.error('[Dashboard] User not authenticated');
+                window.router?.navigate('/login');
+                return;
+            }
+
+            // Check if Supabase is available
+            if (!window.supabase) {
+                console.error('[Dashboard] Supabase not available');
+                window.utils?.showNotification('Database connection error', 'error');
+                return;
+            }
+
+            // Update in database
+            const { error } = await supabase
+                .from('circle_leaders')
+                .update({ event_summary_received: isChecked })
+                .eq('id', leaderId);
+
+            if (error) {
+                console.error('[Dashboard] Error updating event summary:', error);
+                window.utils?.showNotification('Failed to update event summary', 'error');
+                
+                // Revert checkbox state
+                const checkbox = document.getElementById(`eventSummary_${leaderId}`);
+                if (checkbox) {
+                    checkbox.checked = !isChecked;
+                }
+                return;
+            }
+
+            // Update local data
+            const leader = this.circleLeaders.find(l => l.id === leaderId);
+            if (leader) {
+                leader.event_summary_received = isChecked;
+                console.log('[Dashboard] Updated main leader data:', leader.name, isChecked);
+            }
+
+            // Update filtered data if leader is currently visible
+            const filteredLeader = this.filteredLeaders.find(l => l.id === leaderId);
+            if (filteredLeader) {
+                filteredLeader.event_summary_received = isChecked;
+                console.log('[Dashboard] Updated filtered leader data:', filteredLeader.name, isChecked);
+            }
+
+            // Use setTimeout to ensure DOM is updated before progress calculation
+            setTimeout(() => {
+                this.refreshEventSummaryProgress();
+            }, 0);
+
+            console.log('[Dashboard] Event summary updated successfully');
+            
+        } catch (error) {
+            console.error('[Dashboard] Error in toggleEventSummary:', error);
+            window.utils?.showNotification('Error updating event summary', 'error');
+            
+            // Revert checkbox state
+            const checkbox = document.getElementById(`eventSummary_${leaderId}`);
+            if (checkbox) {
+                checkbox.checked = !isChecked;
+            }
+        }
+    }
+
+    async resetEventSummaryCheckboxes() {
+        console.log('[Dashboard] Resetting event summary checkboxes for visible leaders');
+        
+        if (this.filteredLeaders.length === 0) {
+            window.utils?.showNotification('No leaders visible to reset', 'info');
+            return;
+        }
+
+        const confirmReset = confirm(`This will reset the Event Summary status to "Not Received" for all ${this.filteredLeaders.length} currently visible Circle Leaders. Are you sure?`);
+        
+        if (!confirmReset) {
+            return;
+        }
+
+        try {
+            // Validate authentication state
+            if (!window.authManager || !window.authManager.isAuthenticated()) {
+                console.error('[Dashboard] User not authenticated');
+                window.router?.navigate('/login');
+                return;
+            }
+
+            // Check if Supabase is available
+            if (!window.supabase) {
+                console.error('[Dashboard] Supabase not available');
+                window.utils?.showNotification('Database connection error', 'error');
+                return;
+            }
+
+            // Get IDs of currently filtered leaders
+            const leaderIds = this.filteredLeaders.map(leader => leader.id);
+
+            // Update in database
+            const { error } = await supabase
+                .from('circle_leaders')
+                .update({ event_summary_received: false })
+                .in('id', leaderIds);
+
+            if (error) {
+                console.error('[Dashboard] Error resetting event summaries:', error);
+                window.utils?.showNotification('Failed to reset event summaries', 'error');
+                return;
+            }
+
+            // Update local data
+            this.circleLeaders.forEach(leader => {
+                if (leaderIds.includes(leader.id)) {
+                    leader.event_summary_received = false;
+                }
+            });
+
+            this.filteredLeaders.forEach(leader => {
+                leader.event_summary_received = false;
+            });
+
+            // Update UI - uncheck all visible checkboxes
+            leaderIds.forEach(leaderId => {
+                const checkbox = document.getElementById(`eventSummary_${leaderId}`);
+                if (checkbox) {
+                    checkbox.checked = false;
+                }
+            });
+
+            // Update progress bar
+            setTimeout(() => {
+                this.refreshEventSummaryProgress();
+            }, 0);
+
+            window.utils?.showNotification(`Reset ${leaderIds.length} event summary checkboxes`, 'success');
+            console.log('[Dashboard] Event summary checkboxes reset successfully');
+            
+        } catch (error) {
+            console.error('[Dashboard] Error in resetEventSummaryCheckboxes:', error);
+            window.utils?.showNotification('Error resetting event summaries', 'error');
+        }
+    }
+
+    updateEventSummaryProgress() {
+        const progressText = document.getElementById('progressText');
+        const progressBar = document.getElementById('progressBar');
+        
+        if (!progressText || !progressBar) {
+            console.warn('[Dashboard] Progress elements not found:', { progressText: !!progressText, progressBar: !!progressBar });
+            return;
+        }
+
+        // Count received summaries in filtered leaders (currently visible)
+        const totalVisible = this.filteredLeaders.length;
+        const receivedCount = this.filteredLeaders.filter(leader => leader.event_summary_received === true).length;
+        
+        // Calculate percentage
+        const percentage = totalVisible > 0 ? Math.round((receivedCount / totalVisible) * 100) : 0;
+        
+        // Update text
+        progressText.textContent = `${receivedCount} out of ${totalVisible} received`;
+        
+        // Update progress bar with smooth transition
+        progressBar.style.width = `${percentage}%`;
+        
+        // Add color coding based on progress
+        progressBar.className = progressBar.className.replace(/bg-\w+-\d+/g, '');
+        if (percentage === 100) {
+            progressBar.classList.add('bg-green-600');
+        } else if (percentage >= 75) {
+            progressBar.classList.add('bg-green-500');
+        } else if (percentage >= 50) {
+            progressBar.classList.add('bg-yellow-500');
+        } else if (percentage >= 25) {
+            progressBar.classList.add('bg-orange-500');
+        } else {
+            progressBar.classList.add('bg-red-500');
+        }
+        
+        console.log('[Dashboard] Progress updated:', { receivedCount, totalVisible, percentage });
+    }
+
+    // Force refresh of progress bar data
+    refreshEventSummaryProgress() {
+        console.log('[Dashboard] Force refreshing progress data...');
+        
+        // Log current state for debugging
+        console.log('[Dashboard] Current filteredLeaders:', this.filteredLeaders.length);
+        console.log('[Dashboard] Received status:', this.filteredLeaders.map(l => ({ 
+            name: l.name, 
+            received: l.event_summary_received 
+        })));
+        
+        this.updateEventSummaryProgress();
     }
 
     cleanup() {

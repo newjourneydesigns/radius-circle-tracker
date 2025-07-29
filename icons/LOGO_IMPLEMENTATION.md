@@ -31,9 +31,13 @@ The following icon files should be placed in the `/icons/` directory:
 - **apple-touch-icon-120x120.png** - 120×120px (iPhone)
 
 ### Design Recommendations
-- **Format**: PNG with transparency
+- **Format**: PNG with transparency for web icons, solid backgrounds for Apple touch icons
 - **Style**: Simple, high-contrast design that works at small sizes
 - **Colors**: Should work well on both light and dark backgrounds
+- **Apple Touch Icons**: Use dark grey background (#374151 or similar) to ensure logo visibility on iOS
 - **Content**: "RADIUS" text or "R" monogram with church branding
+
+### Apple Touch Icon Background
+iOS devices display Apple touch icons with the provided background color. Since iOS often uses light backgrounds, the Apple touch icons should have a **dark grey background (#374151)** to ensure the logo is visible against light interfaces.
 
 The logo implementation is now complete and will display consistently throughout the application once the actual PNG files are added to the `/icons/` directory.
