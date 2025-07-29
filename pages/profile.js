@@ -246,34 +246,8 @@ export default class ProfilePage {
                     </div>
                 </div>
 
-                <!-- Follow-up and Notes -->
+                <!-- Notes Section -->
                 <div class="space-y-6">
-                    <!-- Mark Follow-up -->
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
-                        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Mark Follow-up</h3>
-                        </div>
-                        <div class="px-6 py-4">
-                            <form id="followUpForm" class="space-y-4">
-                                <div>
-                                    <label for="followUpDate" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Follow-up Date</label>
-                                    <input type="date" id="followUpDate" required
-                                           class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                                </div>
-                                <div>
-                                    <label for="followUpNote" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Note</label>
-                                    <div id="followUpNoteEditor" class="mt-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 min-h-[100px] p-3 focus-within:ring-primary-500 focus-within:border-primary-500"
-                                         contenteditable="true" 
-                                         data-placeholder="Add follow-up notes..."></div>
-                                </div>
-                                <button type="submit" 
-                                        class="w-full bg-yellow-600 text-white py-2 px-4 rounded-md hover:bg-yellow-700 focus:outline-none focus:ring-2 focus:ring-yellow-500">
-                                    Mark Follow-up
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-
                     <!-- Add Note -->
                     <div class="bg-white dark:bg-gray-800 rounded-lg shadow">
                         <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
@@ -327,9 +301,6 @@ export default class ProfilePage {
         if (entry.type === 'communication') {
             iconClass = 'bg-blue-100 text-blue-600 dark:bg-blue-900 dark:text-blue-400';
             title = entry.communication_type || 'Communication';
-        } else if (entry.follow_up_date) {
-            iconClass = 'bg-yellow-100 text-yellow-600 dark:bg-yellow-900 dark:text-yellow-400';
-            title = 'Follow-up';
         }
 
         return `
@@ -362,15 +333,10 @@ export default class ProfilePage {
                             </button>
                         </div>
                     </div>
-                    ${entry.note || entry.follow_up_note ? `
+                    ${entry.note ? `
                         <div class="mt-2 text-sm text-gray-700 dark:text-gray-300 prose prose-sm max-w-none">
-                            ${entry.note || entry.follow_up_note || ''}
+                            ${entry.note || ''}
                         </div>
-                    ` : ''}
-                    ${entry.follow_up_date ? `
-                        <p class="mt-1 text-xs text-yellow-600 dark:text-yellow-400">
-                            Follow-up scheduled for ${window.utils.formatDate(entry.follow_up_date)}
-                        </p>
                     ` : ''}
                 </div>
             </div>
@@ -443,7 +409,6 @@ export default class ProfilePage {
         const followUpDate = document.getElementById('followUpDate');
         
         if (commDate) commDate.value = today;
-        if (followUpDate) followUpDate.value = today;
     }
 
     setupEventListeners() {
@@ -465,10 +430,6 @@ export default class ProfilePage {
         const communicationForm = document.getElementById('communicationForm');
         communicationForm?.addEventListener('submit', (e) => this.handleCommunicationSubmit(e));
 
-        // Follow-up form
-        const followUpForm = document.getElementById('followUpForm');
-        followUpForm?.addEventListener('submit', (e) => this.handleFollowUpSubmit(e));
-
         // Note form
         const noteForm = document.getElementById('noteForm');
         noteForm?.addEventListener('submit', (e) => this.handleNoteSubmit(e));
@@ -478,7 +439,7 @@ export default class ProfilePage {
     }
 
     setupRichTextEditors() {
-        const editors = ['commNoteEditor', 'followUpNoteEditor', 'freeformNoteEditor'];
+        const editors = ['commNoteEditor', 'freeformNoteEditor'];
         
         editors.forEach(editorId => {
             const editor = document.getElementById(editorId);
@@ -555,53 +516,6 @@ export default class ProfilePage {
         } catch (error) {
             console.error('Error saving communication:', error);
             window.utils.showNotification('Error saving communication', 'error');
-        }
-    }
-
-    async handleFollowUpSubmit(e) {
-        e.preventDefault();
-        
-        const formData = new FormData(e.target);
-        const followUpDate = formData.get('followUpDate');
-        const followUpNote = document.getElementById('followUpNoteEditor').innerHTML;
-
-        try {
-            // Update leader with follow-up info
-            const { error: updateError } = await supabase
-                .from('circle_leaders')
-                .update({ 
-                    follow_up_date: followUpDate,
-                    follow_up_note: followUpNote 
-                })
-                .eq('id', this.leaderId);
-
-            if (updateError) throw updateError;
-
-            // Save as note
-            const { error: noteError } = await supabase
-                .from('notes')
-                .insert([{
-                    circle_leader_id: this.leaderId,
-                    note_date: followUpDate,
-                    note: followUpNote,
-                    follow_up_date: followUpDate,
-                    created_at: new Date().toISOString()
-                }]);
-
-            if (noteError) throw noteError;
-
-            window.utils.showNotification('Follow-up marked successfully', 'success');
-            
-            // Reset form and reload data
-            e.target.reset();
-            document.getElementById('followUpNoteEditor').innerHTML = '';
-            await this.loadLeaderData();
-            this.renderProfile();
-            this.setupEventListeners();
-
-        } catch (error) {
-            console.error('Error saving follow-up:', error);
-            window.utils.showNotification('Error saving follow-up', 'error');
         }
     }
 

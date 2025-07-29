@@ -382,14 +382,6 @@ export default class DashboardPage {
 
         // Remove the event delegation approach since we're using inline handlers
         // Event summary checkbox handler is now handled via inline onchange
-
-        // Clear follow-up button handler (using event delegation)
-        document.addEventListener('click', (e) => {
-            if (e.target.dataset.action === 'clear-followup') {
-                const leaderId = e.target.dataset.leaderId;
-                this.clearFollowUp(leaderId);
-            }
-        });
     }
 
     async handleEventSummaryChange(leaderId, isChecked) {
@@ -672,7 +664,6 @@ export default class DashboardPage {
             'Paused': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
         };
 
-        const hasFollowUp = leader.follow_up_date && new Date(leader.follow_up_date) >= new Date();
         const isAdmin = window.authManager.isAdmin();
 
         return `
@@ -686,11 +677,6 @@ export default class DashboardPage {
                                 ${leader.circle_type || ''} → ${leader.day || ''} → ${leader.time || ''} → ${leader.frequency || ''}
                             </p>
                         </div>
-                        ${hasFollowUp ? `
-                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300">
-                                Follow-up
-                            </span>
-                        ` : ''}
                     </div>
 
                     <!-- Status Badge -->
@@ -779,38 +765,10 @@ export default class DashboardPage {
                                 </button>
                             ` : ''}
                         </div>
-                        ${hasFollowUp && isAdmin ? `
-                            <button data-action="clear-followup" 
-                                    data-leader-id="${leader.id}"
-                                    class="text-sm bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700">
-                                Clear Follow-up
-                            </button>
-                        ` : ''}
                     </div>
                 </div>
             </div>
         `;
-    }
-
-    async clearFollowUp(leaderId) {
-        try {
-            const { error } = await supabase
-                .from('circle_leaders')
-                .update({ 
-                    follow_up_date: null,
-                    follow_up_note: null 
-                })
-                .eq('id', leaderId);
-
-            if (error) throw error;
-
-            window.utils.showNotification('Follow-up cleared', 'success');
-            await this.loadData();
-            this.applyFilters();
-        } catch (error) {
-            console.error('Error clearing follow-up:', error);
-            window.utils.showNotification('Error clearing follow-up', 'error');
-        }
     }
 
     async updateEventSummaryStatus(leaderId, isChecked) {

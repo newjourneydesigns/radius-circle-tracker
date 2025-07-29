@@ -147,7 +147,7 @@ export default class ReportsPage {
                 </div>
 
                 <!-- Summary Stats -->
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
                     <div class="text-center">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white">Active Circle Leaders</h3>
                         <p class="text-3xl font-bold text-primary-600 dark:text-primary-400">${this.reportData.activeLeaders}</p>
@@ -155,10 +155,6 @@ export default class ReportsPage {
                     <div class="text-center">
                         <h3 class="text-lg font-medium text-gray-900 dark:text-white">Total Communications</h3>
                         <p class="text-3xl font-bold text-green-600 dark:text-green-400">${this.reportData.totalCommunications}</p>
-                    </div>
-                    <div class="text-center">
-                        <h3 class="text-lg font-medium text-gray-900 dark:text-white">Follow-ups Scheduled</h3>
-                        <p class="text-3xl font-bold text-yellow-600 dark:text-yellow-400">${this.reportData.followUps}</p>
                     </div>
                 </div>
 
@@ -172,9 +168,6 @@ export default class ReportsPage {
                                 </th>
                                 <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                     Communications
-                                </th>
-                                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                    Follow-ups
                                 </th>
                             </tr>
                         </thead>
@@ -209,16 +202,6 @@ export default class ReportsPage {
                             </div>
                         `).join('')}
                         ${leader.communications.length === 0 ? '<div class="text-sm text-gray-400">No communications</div>' : ''}
-                    </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                    <div class="space-y-1">
-                        ${leader.followUps.map(followUp => `
-                            <div class="text-sm text-gray-900 dark:text-white">
-                                ${window.utils.formatDate(followUp.follow_up_date)}
-                            </div>
-                        `).join('')}
-                        ${leader.followUps.length === 0 ? '<div class="text-sm text-gray-400">No follow-ups</div>' : ''}
                     </div>
                 </td>
             </tr>
@@ -314,18 +297,8 @@ export default class ReportsPage {
 
             if (commError) throw commError;
 
-            // Load follow-ups for the month
-            const { data: followUps, error: followUpError } = await supabase
-                .from('notes')
-                .select('*, circle_leader:circle_leaders(name, circle_type, campus)')
-                .not('follow_up_date', 'is', null)
-                .gte('follow_up_date', startDate.toISOString().split('T')[0])
-                .lte('follow_up_date', endDate.toISOString().split('T')[0]);
-
-            if (followUpError) throw followUpError;
-
             // Process data
-            this.reportData = this.processReportData(leaders, communications, followUps);
+            this.reportData = this.processReportData(leaders, communications);
 
             // Render report
             const reportContent = document.getElementById('reportContent');
@@ -347,7 +320,7 @@ export default class ReportsPage {
         }
     }
 
-    processReportData(leaders, communications, followUps) {
+    processReportData(leaders, communications) {
         // Group communications by leader
         const commsByLeader = {};
         communications.forEach(comm => {
@@ -357,26 +330,15 @@ export default class ReportsPage {
             commsByLeader[comm.circle_leader_id].push(comm);
         });
 
-        // Group follow-ups by leader
-        const followUpsByLeader = {};
-        followUps.forEach(followUp => {
-            if (!followUpsByLeader[followUp.circle_leader_id]) {
-                followUpsByLeader[followUp.circle_leader_id] = [];
-            }
-            followUpsByLeader[followUp.circle_leader_id].push(followUp);
-        });
-
         // Build report data
         const processedLeaders = leaders.map(leader => ({
             ...leader,
-            communications: commsByLeader[leader.id] || [],
-            followUps: followUpsByLeader[leader.id] || []
+            communications: commsByLeader[leader.id] || []
         }));
 
         return {
             activeLeaders: leaders.length,
             totalCommunications: communications.length,
-            followUps: followUps.length,
             leaders: processedLeaders
         };
     }

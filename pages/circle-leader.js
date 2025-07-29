@@ -433,9 +433,7 @@ export default class CircleLeaderPage {
             'time': this.convertTo12HourFormat(allData.meeting_time), // Convert to AM/PM format
             'frequency': allData.frequency,    // Frequency dropdown
             'ccb_profile_link': allData.ccb_profile_link, // CCB Profile Link
-            'status': allData.status || 'Active', // Default status if not provided
-            'follow_up_date': allData.follow_up_date,
-            'follow_up_note': allData.follow_up_note
+            'status': allData.status || 'invited' // Default status to invited
         };
 
         // Filter out null/undefined values but keep empty strings for optional fields
@@ -541,7 +539,7 @@ export default class CircleLeaderPage {
 
         // Show confirmation dialog
         const leaderName = this.leader?.name || 'this circle leader';
-        const confirmMessage = `Are you sure you want to delete ${leaderName}?\n\nThis action will permanently remove:\n• The circle leader profile\n• All communications history\n• All notes and follow-ups\n\nThis cannot be undone.`;
+        const confirmMessage = `Are you sure you want to delete ${leaderName}?\n\nThis action will permanently remove:\n• The circle leader profile\n• All communications history\n• All notes\n\nThis cannot be undone.`;
         
         if (!confirm(confirmMessage)) {
             return;
