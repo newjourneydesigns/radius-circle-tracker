@@ -131,39 +131,12 @@ class Router {
                 case '/org-settings':
                     pageModule = await import('/pages/org-settings.js');
                     break;
-                case '/circle-leader/new':
-                    console.log('[Router] Loading circle leader page for NEW');
-                    pageModule = await import('/pages/circle-leader.js?v=' + Date.now());
-                    break;
                 default:
-                    // Check if it's a circle leader profile page or edit page
-                    console.log('Handling dynamic route:', path);
-                    if (path.startsWith('/circle-leader/')) {
-                        const segments = path.split('/');
-                        console.log('Circle leader route segments:', segments);
-                        if (segments.length >= 4 && segments[3] === 'edit') {
-                            // This is an edit page: /circle-leader/id/edit
-                            console.log('Loading edit page for circle leader:', segments[2]);
-                            pageModule = await import('/pages/circle-leader.js');
-                        } else if (segments.length >= 3) {
-                            // This is a profile page: /circle-leader/id
-                            console.log('Loading profile page for circle leader:', segments[2]);
-                            pageModule = await import('/pages/profile.js');
-                        } else {
-                            // 404 - redirect to dashboard
-                            console.log('Invalid circle leader route, redirecting to dashboard');
-                            clearTimeout(navigationTimeout);
-                            this.isNavigating = false;
-                            this.navigate('/dashboard');
-                            return;
-                        }
-                    } else {
-                        // 404 - redirect to dashboard
-                        clearTimeout(navigationTimeout);
-                        this.isNavigating = false;
-                        this.navigate('/dashboard');
-                        return;
-                    }
+                    // 404 - redirect to dashboard
+                    clearTimeout(navigationTimeout);
+                    this.isNavigating = false;
+                    this.navigate('/dashboard');
+                    return;
             }
 
             // Cleanup current page with error handling
