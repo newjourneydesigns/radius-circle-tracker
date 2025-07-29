@@ -53,7 +53,7 @@ CREATE TABLE IF NOT EXISTS public.notes (
   id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
   circle_leader_id UUID REFERENCES circle_leaders(id) ON DELETE CASCADE,
   note_date DATE NOT NULL,
-  note TEXT,
+  content TEXT,
   follow_up_date DATE,
   created_by UUID REFERENCES users(id),
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
@@ -62,7 +62,7 @@ CREATE TABLE IF NOT EXISTS public.notes (
 -- Add missing columns to notes table if they don't exist
 ALTER TABLE public.notes 
 ADD COLUMN IF NOT EXISTS note_date DATE,
-ADD COLUMN IF NOT EXISTS note TEXT,
+ADD COLUMN IF NOT EXISTS content TEXT,
 ADD COLUMN IF NOT EXISTS follow_up_date DATE,
 ADD COLUMN IF NOT EXISTS created_by UUID,
 ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();

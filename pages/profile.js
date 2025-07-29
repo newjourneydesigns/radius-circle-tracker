@@ -302,9 +302,9 @@ export default class ProfilePage {
                             </button>
                         </div>
                     </div>
-                    ${entry.note ? `
+                    ${entry.content || entry.note ? `
                         <div class="mt-2 text-sm text-gray-700 dark:text-gray-300 prose prose-sm max-w-none">
-                            ${entry.note || ''}
+                            ${entry.content || entry.note || ''}
                         </div>
                     ` : ''}
                 </div>
@@ -443,7 +443,7 @@ export default class ProfilePage {
                 .insert([{
                     circle_leader_id: this.leaderId,
                     note_date: new Date().toISOString().split('T')[0],
-                    note: freeformNote,
+                    content: freeformNote,
                     created_at: new Date().toISOString()
                 }]);
 
