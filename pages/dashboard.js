@@ -1098,8 +1098,11 @@ export default class DashboardPage {
             <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
                 <td class="px-6 py-4 whitespace-nowrap">
                     <div class="flex items-center">
-                        <div class="text-sm font-medium text-gray-900 dark:text-white">
-                            ${leader.name || 'Unnamed Leader'}
+                        <div class="text-sm font-medium">
+                            <a href="#/profile/${leader.id}" 
+                               class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 hover:underline cursor-pointer">
+                                ${leader.name || 'Unnamed Leader'}
+                            </a>
                         </div>
                     </div>
                 </td>
