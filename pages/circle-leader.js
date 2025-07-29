@@ -422,179 +422,66 @@ export default class CircleLeaderPage {
 
     async handleSubmit(e) {
         e.preventDefault();
-        console.log('[CircleLeader] handleSubmit called');
+        console.log('[CircleLeader] Form submitted - starting simple test');
 
         // Prevent multiple submissions
         if (this.isSubmitting) {
-            console.log('[CircleLeader] Already submitting, ignoring duplicate submission');
+            console.log('[CircleLeader] Already submitting');
             return;
         }
         this.isSubmitting = true;
 
-        const formData = new FormData(e.target);
-        const allData = {};
-        
-        console.log('[CircleLeader] FormData entries:');
-        for (let [key, value] of formData) {
-            console.log(`[CircleLeader] Form field: ${key} = "${value}"`);
-            allData[key] = value || null;
-        }
-        
-        console.log('[CircleLeader] All collected form data:', allData);
-
-        // Only include fields that exist in the database schema and are in the form
-        const validFields = {
-            'name': allData.name,
-            'email': allData.email,            // Email field
-            'phone': allData.phone,            // Phone field
-            'campus': allData.campus,          // Campus dropdown
-            'acpd': allData.acpd,             // ACPD dropdown
-            'circle_type': allData.circle_type, // Circle Type dropdown
-            'day': allData.meeting_day,        // Form field meeting_day maps to database field day
-            'time': this.convertTo12HourFormat(allData.meeting_time), // Convert to AM/PM format
-            'frequency': allData.frequency,    // Frequency dropdown
-            'ccb_profile_link': allData.ccb_profile_link, // CCB Profile Link
-            'status': allData.status || 'invited' // Default status to invited
-        };
-
-        // Build final data object - only include non-null values
-        const data = {};
-        Object.keys(validFields).forEach(key => {
-            const value = validFields[key];
-            if (value !== null && value !== undefined && value !== '') {
-                data[key] = value;
-            }
-        });
-        
-        // Ensure required fields are present for new records
-        if (!this.isEditing) {
-            const requiredFields = ['name', 'email', 'campus', 'acpd', 'status'];
-            for (const field of requiredFields) {
-                if (!data[field]) {
-                    throw new Error(`${field} is required`);
-                }
-            }
-        }
-
-        console.log('[CircleLeader] All form data:', allData);
-        console.log('[CircleLeader] Filtered valid data:', data);
-        console.log('[CircleLeader] Is editing:', this.isEditing);
-        console.log('[CircleLeader] Leader ID:', this.leaderId);
-        console.log('[CircleLeader] Supabase client available:', !!window.supabase);
-
-        // Ensure supabase is available
-        if (!window.supabase) {
-            console.error('[CircleLeader] Supabase client is not initialized');
-            throw new Error('Supabase client not available');
-        }
-
         try {
-            let result;
+            // Test 1: Check Supabase
+            console.log('[CircleLeader] Testing Supabase connection...');
+            if (!window.supabase) {
+                throw new Error('Supabase not available');
+            }
 
-            if (this.isEditing) {
-                console.log('[CircleLeader] Updating leader with ID:', this.leaderId);
-                console.log('[CircleLeader] Update data:', data);
+            // Test 2: Simple insert with minimal data
+            console.log('[CircleLeader] Attempting simple insert...');
+            const testData = {
+                name: 'Test Leader',
+                email: 'test@example.com',
+                campus: 'Test Campus',
+                acpd: 'Test ACPD',
+                status: 'invited'
+            };
 
-                const { data: updateData, error: updateError } = await window.supabase
-                    .from('circle_leaders')
-                    .update(data)
-                    .eq('id', this.leaderId)
-                    .select()
-                    .single();
+            console.log('[CircleLeader] Test data:', testData);
+            
+            const { data, error } = await window.supabase
+                .from('circle_leaders')
+                .insert(testData)
+                .select();
 
-                console.log('[CircleLeader] Raw update response:', { updateData, updateError });
-                result = { data: updateData, error: updateError };
-                console.log('[CircleLeader] Update result:', result);
-            } else {
-                // Create new leader
-                console.log('[CircleLeader] Creating new leader');
-                console.log('[CircleLeader] Data to insert:', data);
+            console.log('[CircleLeader] Insert result:', { data, error });
 
-                console.log('[CircleLeader] About to call Supabase insert...');
-                const { data: insertData, error: insertError } = await window.supabase
-                    .from('circle_leaders')
-                    .insert(data)
-                    .select();
+            if (error) {
+                console.error('[CircleLeader] Insert failed:', error);
+                throw error;
+            }
 
-                console.log('[CircleLeader] Supabase insert completed');
-                console.log('[CircleLeader] Raw insert response:', { insertData, insertError });
+            if (data && data.length > 0) {
+                console.log('[CircleLeader] SUCCESS! Created:', data[0]);
+                alert('SUCCESS! Circle leader created with ID: ' + data[0].id);
                 
-                if (insertError) {
-                    console.error('[CircleLeader] Insert error:', insertError);
-                    throw insertError;
-                }
+                // Clean up - delete the test record
+                await window.supabase
+                    .from('circle_leaders')
+                    .delete()
+                    .eq('id', data[0].id);
                 
-                if (insertData && insertData.length > 0) {
-                    result = { data: insertData[0], error: null };
-                    console.log('[CircleLeader] Insert successful:', result.data);
-                } else {
-                    throw new Error('No data returned from insert');
-                }
-
-                // Generate default CCB link if not provided
-                if (result.data && !data.ccb_profile_link) {
-                    const defaultCcbLink = `https://valleycreekchurch.ccbchurch.com/goto/groups/${result.data.id}/events`;
-
-                    const { error: updateError } = await window.supabase
-                        .from('circle_leaders')
-                        .update({ ccb_profile_link: defaultCcbLink })
-                        .eq('id', result.data.id);
-
-                    if (updateError) {
-                        console.warn('[CircleLeader] Could not update CCB link:', updateError);
-                    } else {
-                        console.log('[CircleLeader] Generated default CCB link:', defaultCcbLink);
-                    }
-                }
-            }
-
-            if (result.error) {
-                console.error('[CircleLeader] Database error:', result.error);
-                throw result.error;
-            }
-
-            console.log('[CircleLeader] Operation successful, showing notification');
-            if (window.utils && window.utils.showNotification) {
-                window.utils.showNotification(
-                    `Circle leader ${this.isEditing ? 'updated' : 'created'} successfully!`,
-                    'success'
-                );
+                console.log('[CircleLeader] Test record cleaned up');
             } else {
-                alert(`Circle leader ${this.isEditing ? 'updated' : 'created'} successfully!`);
+                throw new Error('No data returned from insert');
             }
 
-            this.isSubmitting = false;
-            console.log('[CircleLeader] Navigating to dashboard');
-            window.router.navigate('/dashboard');
         } catch (error) {
-            console.error('[CircleLeader] Error saving circle leader:', error);
-            console.error('[CircleLeader] Error stack:', error.stack);
+            console.error('[CircleLeader] ERROR:', error);
+            alert('ERROR: ' + error.message);
+        } finally {
             this.isSubmitting = false;
-            
-            let errorMessage = `Error ${this.isEditing ? 'updating' : 'creating'} circle leader: `;
-            
-            if (error.message) {
-                errorMessage += error.message;
-            } else {
-                errorMessage += 'Unknown error occurred';
-            }
-            
-            // Add additional details if available
-            if (error.details) {
-                errorMessage += ` (${error.details})`;
-            }
-            
-            if (error.hint) {
-                errorMessage += ` Hint: ${error.hint}`;
-            }
-            
-            console.error('[CircleLeader] Final error message:', errorMessage);
-            
-            if (window.utils && window.utils.showNotification) {
-                window.utils.showNotification(errorMessage, 'error');
-            } else {
-                alert(errorMessage);
-            }
         }
     }
 
