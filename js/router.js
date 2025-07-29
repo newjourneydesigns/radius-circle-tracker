@@ -132,6 +132,7 @@ class Router {
                     pageModule = await import('/pages/org-settings.js');
                     break;
                 case '/circle-leader/new':
+                    console.log('[Router] Loading ADD circle leader page');
                     pageModule = await import('/pages/add-circle-leader.js?v=' + Date.now());
                     break;
                 default:

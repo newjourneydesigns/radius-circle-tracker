@@ -226,6 +226,7 @@ export default class AddCircleLeaderPage {
 
     async init() {
         console.log('[AddCircleLeader] Initializing page');
+        console.log('[AddCircleLeader] THIS IS THE NEW ADD CIRCLE LEADER PAGE!');
         
         // Make this instance available globally for onclick handlers
         window.addCircleLeaderPage = this;
