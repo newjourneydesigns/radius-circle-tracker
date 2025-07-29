@@ -264,6 +264,10 @@ export default class ProfilePage {
         const isAdmin = window.authManager.isAdmin();
         const date = entry.communication_date || entry.note_date || entry.created_at;
         
+        // Debug logging
+        console.log('Rendering entry:', entry);
+        console.log('Entry ID:', entry.id, 'Type:', typeof entry.id);
+        
         let iconClass = 'bg-gray-100 text-gray-600 dark:bg-gray-700 dark:text-gray-400';
         let title = 'Note';
         
