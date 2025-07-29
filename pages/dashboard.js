@@ -399,20 +399,29 @@ export default class DashboardPage {
     }
 
     setupEventListeners() {
+        // Clean up existing listeners first to prevent duplicates
+        this.cleanup();
+        
         // Menu toggle
         const menuButton = document.getElementById('menuButton');
         const menuDropdown = document.getElementById('menuDropdown');
         
-        menuButton?.addEventListener('click', () => {
+        const menuClickHandler = () => {
             menuDropdown.classList.toggle('hidden');
-        });
+        };
+        
+        menuButton?.addEventListener('click', menuClickHandler);
+        this.eventHandlers.menuClick = { element: menuButton, handler: menuClickHandler };
 
         // Close menu when clicking outside
-        document.addEventListener('click', (e) => {
+        const documentClickHandler = (e) => {
             if (!menuButton?.contains(e.target) && !menuDropdown?.contains(e.target)) {
                 menuDropdown?.classList.add('hidden');
             }
-        });
+        };
+        
+        document.addEventListener('click', documentClickHandler);
+        this.eventHandlers.documentClick = { element: document, handler: documentClickHandler };
 
         // Filter toggle button
         const toggleFiltersBtn = document.getElementById('toggleFiltersBtn');
@@ -501,6 +510,20 @@ export default class DashboardPage {
             console.log('[Dashboard] Load already in progress, skipping');
             return;
         }
+
+        // Validate authentication state before proceeding
+        if (!window.authManager || !window.authManager.isAuthenticated()) {
+            console.error('[Dashboard] User not authenticated, redirecting to login');
+            window.router?.navigate('/login');
+            return;
+        }
+
+        // Check if Supabase is available
+        if (!window.supabase) {
+            console.error('[Dashboard] Supabase not available');
+            window.utils?.showNotification('Database connection error', 'error');
+            return;
+        }
         
         this.isLoading = true;
         console.log('[Dashboard] loadData called');
@@ -514,11 +537,18 @@ export default class DashboardPage {
                 .select('*')
                 .order('name');
             
-            const timeoutPromise = new Promise((_, reject) => 
-                setTimeout(() => reject(new Error('Database query timeout')), 15000)
-            );
+            // Create timeout with cleanup
+            let timeoutId;
+            const timeoutPromise = new Promise((_, reject) => {
+                timeoutId = setTimeout(() => reject(new Error('Database query timeout')), 15000);
+            });
             
             const { data: leaders, error: leadersError } = await Promise.race([leadersPromise, timeoutPromise]);
+            
+            // Clear timeout if query completes
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
 
             console.log('[Dashboard] Circle leaders query result:', { leaders, error: leadersError });
 
@@ -530,29 +560,47 @@ export default class DashboardPage {
             if (this.circleLeaders.length > 0) {
                 console.log('[Dashboard] Loading last notes for circle leaders...');
                 
-                const notesPromise = supabase
-                    .from('notes')
-                    .select('circle_leader_id, content, created_at')
-                    .order('created_at', { ascending: false });
-                
-                const { data: notes, error: notesError } = await Promise.race([notesPromise, timeoutPromise]);
-                
-                if (!notesError && notes) {
-                    // Group notes by circle leader ID and get the most recent for each
-                    const notesByLeader = {};
-                    notes.forEach(note => {
-                        if (!notesByLeader[note.circle_leader_id]) {
-                            notesByLeader[note.circle_leader_id] = note;
-                        }
+                try {
+                    const notesPromise = supabase
+                        .from('notes')
+                        .select('circle_leader_id, content, created_at')
+                        .order('created_at', { ascending: false });
+                    
+                    // Create separate timeout for notes
+                    let notesTimeoutId;
+                    const notesTimeoutPromise = new Promise((_, reject) => {
+                        notesTimeoutId = setTimeout(() => reject(new Error('Notes query timeout')), 10000);
                     });
                     
-                    // Add last note to each circle leader
-                    this.circleLeaders = this.circleLeaders.map(leader => ({
-                        ...leader,
-                        last_note: notesByLeader[leader.id]
-                    }));
+                    const { data: notes, error: notesError } = await Promise.race([notesPromise, notesTimeoutPromise]);
                     
-                    console.log('[Dashboard] Added last notes to circle leaders');
+                    // Clear timeout
+                    if (notesTimeoutId) {
+                        clearTimeout(notesTimeoutId);
+                    }
+                    
+                    if (!notesError && notes) {
+                        // Group notes by circle leader ID and get the most recent for each
+                        const notesByLeader = {};
+                        notes.forEach(note => {
+                            if (!notesByLeader[note.circle_leader_id]) {
+                                notesByLeader[note.circle_leader_id] = note;
+                            }
+                        });
+                        
+                        // Add last note to each circle leader
+                        this.circleLeaders = this.circleLeaders.map(leader => ({
+                            ...leader,
+                            last_note: notesByLeader[leader.id]
+                        }));
+                        
+                        console.log('[Dashboard] Added last notes to circle leaders');
+                    } else if (notesError) {
+                        console.warn('[Dashboard] Notes loading failed, continuing without notes:', notesError);
+                    }
+                } catch (notesError) {
+                    console.warn('[Dashboard] Notes loading failed, continuing without notes:', notesError);
+                    // Continue without notes - don't fail the entire load
                 }
             }
             
@@ -587,7 +635,19 @@ export default class DashboardPage {
 
         } catch (error) {
             console.error('[Dashboard] Error loading data:', error);
-            window.utils.showNotification('Error loading circle leaders', 'error');
+            
+            // Handle different types of errors
+            if (error.message.includes('timeout')) {
+                window.utils?.showNotification('Loading taking longer than expected. Please refresh if needed.', 'warning');
+            } else if (error.message.includes('network') || error.message.includes('fetch')) {
+                window.utils?.showNotification('Network error. Please check your connection and try again.', 'error');
+            } else if (error.message.includes('auth') || error.code === 'PGRST301') {
+                console.error('[Dashboard] Authentication error, redirecting to login');
+                window.router?.navigate('/login');
+                return;
+            } else {
+                window.utils?.showNotification('Error loading circle leaders. Please refresh the page.', 'error');
+            }
         } finally {
             this.isLoading = false;
             console.log('[Dashboard] Load complete, isLoading reset to false');
@@ -738,11 +798,8 @@ export default class DashboardPage {
         this.renderCircleLeaders();
         this.updateTodayCirclesTable();
         
-        // Ensure global reference is maintained
-        if (!window.dashboard) {
-            console.log('[Dashboard] Re-establishing global reference in applyFilters');
-            window.dashboard = this;
-        }
+        // Safely ensure global reference without triggering events
+        this.ensureGlobalReference();
     }
 
     renderCircleLeaders() {
@@ -760,11 +817,8 @@ export default class DashboardPage {
 
         grid.innerHTML = this.filteredLeaders.map(leader => this.renderCircleLeaderCard(leader)).join('');
         
-        // Ensure global reference is maintained
-        if (!window.dashboard) {
-            console.log('[Dashboard] Re-establishing global reference in renderCircleLeaders');
-            window.dashboard = this;
-        }
+        // Safely ensure global reference
+        this.ensureGlobalReference();
     }
 
     renderCircleLeaderCard(leader) {
@@ -863,9 +917,21 @@ export default class DashboardPage {
     async updateStats() {
         console.log('[Dashboard] updateStats called');
         try {
+            // Validate authentication state
+            if (!window.authManager || !window.authManager.isAuthenticated()) {
+                console.warn('[Dashboard] User not authenticated, skipping stats update');
+                return;
+            }
+
             // Check if APP_CONFIG is available
             if (!window.APP_CONFIG || !window.APP_CONFIG.communicationTypes) {
                 console.error('[Dashboard] APP_CONFIG not available, skipping stats update');
+                return;
+            }
+
+            // Check if Supabase is available
+            if (!window.supabase) {
+                console.error('[Dashboard] Supabase not available, skipping stats update');
                 return;
             }
 
@@ -1122,9 +1188,26 @@ export default class DashboardPage {
         }
     }
 
+    ensureGlobalReference() {
+        if (!window.dashboard || window.dashboard !== this) {
+            console.log('[Dashboard] Setting global reference');
+            window.dashboard = this;
+        }
+    }
+
     cleanup() {
-        // Clean up any timers and global reference
-        window.dashboard = null;
+        // Clean up event listeners to prevent memory leaks and duplicates
+        Object.values(this.eventHandlers).forEach(({ element, handler }) => {
+            if (element && handler) {
+                element.removeEventListener('click', handler);
+            }
+        });
+        this.eventHandlers = {};
+        
+        // Clean up global reference
+        if (window.dashboard === this) {
+            window.dashboard = null;
+        }
     }
 }
 // Cache bust: Mon Jul 28 00:45:35 CDT 2025
