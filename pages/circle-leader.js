@@ -296,13 +296,21 @@ export default class CircleLeaderPage {
         console.log('URL segments:', segments);
         console.log('Current path:', window.location.pathname);
         
-        if (segments.length > 1 && segments[0] === 'circle-leader' && segments[1] !== 'new') {
-            if (segments.length > 2 && segments[2] === 'edit') {
+        if (segments.length > 1 && segments[0] === 'circle-leader') {
+            if (segments[1] === 'new') {
+                // This is a new leader page: /circle-leader/new
+                console.log('Setting up new leader mode');
+                this.isEditing = false;
+                this.leaderId = null;
+                this.leader = null;
+                console.log('isEditing set to:', this.isEditing);
+            } else if (segments.length > 2 && segments[2] === 'edit') {
                 // This is an edit page: /circle-leader/123/edit
                 console.log('Setting up edit mode for leader:', segments[1]);
                 this.isEditing = true;
                 this.leaderId = segments[1];
                 console.log('isEditing set to:', this.isEditing);
+                await this.loadLeaderData();
             } else {
                 // This shouldn't happen as profile pages use a different component
                 // But let's handle it gracefully
@@ -310,7 +318,12 @@ export default class CircleLeaderPage {
                 window.router.navigate('/dashboard');
                 return;
             }
-            await this.loadLeaderData();
+        } else {
+            // Default to new leader if no clear path segments
+            console.log('No clear path segments, defaulting to new leader mode');
+            this.isEditing = false;
+            this.leaderId = null;
+            this.leader = null;
         }
 
         console.log('Before populateForm - isEditing:', this.isEditing);
@@ -457,12 +470,15 @@ export default class CircleLeaderPage {
         const data = {};
         for (let [key, value] of Object.entries(validFields)) {
             if (value !== null && value !== undefined) {
-                // For required fields, don't save empty strings
+                // For required fields, validate they're not empty
                 if (['name', 'email', 'campus', 'acpd', 'status'].includes(key) && value === '') {
-                    continue; // Skip empty required fields
+                    console.warn(`[CircleLeader] Required field '${key}' is empty`);
+                    // Don't skip - let validation handle this
+                    data[key] = value;
+                } else {
+                    // For optional fields, save even if empty string
+                    data[key] = value;
                 }
-                // For optional fields, save even if empty string
-                data[key] = value;
             }
         }
 
@@ -470,6 +486,22 @@ export default class CircleLeaderPage {
         console.log('[CircleLeader] Filtered valid data:', data);
         console.log('[CircleLeader] Is editing:', this.isEditing);
         console.log('[CircleLeader] Leader ID:', this.leaderId);
+
+        // Validate required fields before submission
+        const requiredFields = ['name', 'email', 'campus', 'acpd'];
+        const missingFields = [];
+        for (const field of requiredFields) {
+            if (!data[field] || data[field].trim() === '') {
+                missingFields.push(field);
+            }
+        }
+
+        if (missingFields.length > 0) {
+            console.error('[CircleLeader] Missing required fields:', missingFields);
+            window.utils.showNotification(`Please fill in required fields: ${missingFields.join(', ')}`, 'error');
+            this.isSubmitting = false;
+            return;
+        }
 
         try {
             let result;
