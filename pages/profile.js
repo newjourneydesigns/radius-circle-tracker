@@ -227,7 +227,7 @@ export default class ProfilePage {
                         <form id="noteForm" class="space-y-4">
                             <div>
                                 <label for="freeformNote" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Note</label>
-                                <div id="freeformNoteEditor" class="mt-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 min-h-[100px] p-3 focus-within:ring-primary-500 focus-within:border-primary-500"
+                                <div id="freeformNoteEditor" class="mt-1 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-700 text-gray-900 dark:text-white min-h-[100px] p-3 focus-within:ring-primary-500 focus-within:border-primary-500"
                                      contenteditable="true" 
                                      data-placeholder="Add freeform notes..."></div>
                             </div>
@@ -297,7 +297,7 @@ export default class ProfilePage {
                             <button onclick="window.profilePage.deleteEntry('${entry.id}', '${entry.type}')" 
                                     class="text-red-400 hover:text-red-600">
                                 <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9zM4 5a2 2 0 012-2v1a1 1 0 001 1h6a1 1 0 001-1V3a2 2 0 012 2v6.5l1.707 1.707a1 1 0 01-1.414 1.414L15 15.328V11H5v4.328l-1.293 1.379a1 1 0 01-1.414-1.414L4 11.5V5z" clip-rule="evenodd"></path>
+                                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
                                 </svg>
                             </button>
                         </div>
@@ -407,10 +407,10 @@ export default class ProfilePage {
             const updatePlaceholder = () => {
                 const isEmpty = editor.textContent.trim() === '';
                 if (isEmpty && !editor.classList.contains('focus')) {
-                    editor.classList.add('text-gray-400');
+                    editor.classList.add('text-gray-400', 'dark:text-gray-500');
                     editor.innerHTML = editor.dataset.placeholder;
                 } else if (editor.innerHTML === editor.dataset.placeholder) {
-                    editor.classList.remove('text-gray-400');
+                    editor.classList.remove('text-gray-400', 'dark:text-gray-500');
                     editor.innerHTML = '';
                 }
             };
@@ -418,7 +418,7 @@ export default class ProfilePage {
             editor.addEventListener('focus', () => {
                 editor.classList.add('focus');
                 if (editor.innerHTML === editor.dataset.placeholder) {
-                    editor.classList.remove('text-gray-400');
+                    editor.classList.remove('text-gray-400', 'dark:text-gray-500');
                     editor.innerHTML = '';
                 }
             });
