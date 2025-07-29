@@ -696,7 +696,7 @@ export default class DashboardPage {
             this.campuses = [...new Set(leaders?.map(l => l.campus).filter(Boolean))];
             this.acpds = [...new Set(leaders?.map(l => l.acpd).filter(Boolean))];
             this.statuses = [...new Set(leaders?.map(l => l.status).filter(Boolean))];
-            this.circleTypes = [...new Set(leaders?.map(l => l.type).filter(Boolean))];
+            this.circleTypes = [...new Set(leaders?.map(l => l.circle_type).filter(Boolean))];
             console.log('[Dashboard] Extracted campuses:', this.campuses);
             console.log('[Dashboard] Extracted ACPDs:', this.acpds);
             console.log('[Dashboard] Extracted statuses:', this.statuses);
@@ -879,7 +879,7 @@ export default class DashboardPage {
         // Circle Type filter
         if (this.filters.circleType.length > 0) {
             filtered = filtered.filter(leader => 
-                this.filters.circleType.includes(leader.type)
+                this.filters.circleType.includes(leader.circle_type)
             );
         }
 
