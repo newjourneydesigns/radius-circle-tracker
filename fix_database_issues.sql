@@ -48,6 +48,25 @@ UPDATE public.campus_list SET address = '123 Main St, Waterloo' WHERE name = 'Wa
 UPDATE public.campus_list SET address = '456 Oak Ave, Franklin' WHERE name = 'Franklin';
 UPDATE public.campus_list SET address = '789 Church Rd, King of Prussia' WHERE name = 'Main Campus';
 
+-- Ensure notes table exists with correct schema
+CREATE TABLE IF NOT EXISTS public.notes (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  circle_leader_id UUID REFERENCES circle_leaders(id) ON DELETE CASCADE,
+  note_date DATE NOT NULL,
+  note TEXT,
+  follow_up_date DATE,
+  created_by UUID REFERENCES users(id),
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Add missing columns to notes table if they don't exist
+ALTER TABLE public.notes 
+ADD COLUMN IF NOT EXISTS note_date DATE,
+ADD COLUMN IF NOT EXISTS note TEXT,
+ADD COLUMN IF NOT EXISTS follow_up_date DATE,
+ADD COLUMN IF NOT EXISTS created_by UUID,
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW();
+
 -- 1. Update users table to use ACPD instead of Admin (keep for compatibility)
 ALTER TABLE public.users 
 DROP CONSTRAINT IF EXISTS users_role_check;
