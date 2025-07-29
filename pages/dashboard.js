@@ -10,7 +10,8 @@ export default class DashboardPage {
             search: '',
             campus: [],
             acpd: [],
-            status: []
+            status: [],
+            eventSummary: ''
         };
         this.sortBy = 'name';
         this.sortOrder = 'asc';
@@ -29,6 +30,7 @@ export default class DashboardPage {
             campus: this.filters.campus,
             acpd: this.filters.acpd,
             status: this.filters.status,
+            eventSummary: this.filters.eventSummary,
             sortBy: this.sortBy,
             sortOrder: this.sortOrder
         };
@@ -45,6 +47,7 @@ export default class DashboardPage {
                 this.filters.campus = filterState.campus || [];
                 this.filters.acpd = filterState.acpd || [];
                 this.filters.status = filterState.status || [];
+                this.filters.eventSummary = filterState.eventSummary || '';
                 this.sortBy = filterState.sortBy || 'name';
                 this.sortOrder = filterState.sortOrder || 'asc';
                 console.log('[Dashboard] Filter state loaded:', filterState);
@@ -56,7 +59,8 @@ export default class DashboardPage {
                 search: '',
                 campus: [],
                 acpd: [],
-                status: []
+                status: [],
+                eventSummary: ''
             };
             this.sortBy = 'name';
             this.sortOrder = 'asc';
@@ -233,7 +237,7 @@ export default class DashboardPage {
     renderFilters() {
         return `
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-4">
                     <!-- Search -->
                     <div>
                         <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
@@ -265,6 +269,17 @@ export default class DashboardPage {
                         <select id="statusFilter" multiple 
                                 class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500">
                             <!-- Options will be populated dynamically -->
+                        </select>
+                    </div>
+
+                    <!-- Event Summary Filter -->
+                    <div>
+                        <label for="eventSummaryFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Summary</label>
+                        <select id="eventSummaryFilter" 
+                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500">
+                            <option value="">All</option>
+                            <option value="checked">Checked</option>
+                            <option value="unchecked">Unchecked</option>
                         </select>
                     </div>
 
@@ -338,6 +353,7 @@ export default class DashboardPage {
         const campusFilter = document.getElementById('campusFilter');
         const acpdFilter = document.getElementById('acpdFilter');
         const statusFilter = document.getElementById('statusFilter');
+        const eventSummaryFilter = document.getElementById('eventSummaryFilter');
         const sortBySelect = document.getElementById('sortBy');
         const sortOrderBtn = document.getElementById('sortOrderBtn');
 
@@ -355,6 +371,12 @@ export default class DashboardPage {
 
         statusFilter?.addEventListener('change', () => {
             this.filters.status = Array.from(statusFilter.selectedOptions).map(option => option.value);
+            this.applyFilters();
+            this.saveFilterState();
+        });
+
+        eventSummaryFilter?.addEventListener('change', () => {
+            this.filters.eventSummary = eventSummaryFilter.value;
             this.applyFilters();
             this.saveFilterState();
         });
@@ -559,6 +581,12 @@ export default class DashboardPage {
             });
         }
 
+        // Restore event summary filter
+        const eventSummaryFilter = document.getElementById('eventSummaryFilter');
+        if (eventSummaryFilter) {
+            eventSummaryFilter.value = this.filters.eventSummary;
+        }
+
         // Restore sort options
         const sortBySelect = document.getElementById('sortBy');
         if (sortBySelect) {
@@ -612,6 +640,15 @@ export default class DashboardPage {
             filtered = filtered.filter(leader => 
                 this.filters.status.includes(leader.status)
             );
+        }
+
+        // Event Summary filter
+        if (this.filters.eventSummary) {
+            if (this.filters.eventSummary === 'checked') {
+                filtered = filtered.filter(leader => leader.event_summary_received === true);
+            } else if (this.filters.eventSummary === 'unchecked') {
+                filtered = filtered.filter(leader => leader.event_summary_received !== true);
+            }
         }
 
         // Sort
