@@ -17,8 +17,6 @@ export default class DashboardPage {
             meetingDay: [],
             circleType: []
         };
-        this.sortBy = 'name';
-        this.sortOrder = 'asc';
         this.isLoading = false; // Prevent multiple simultaneous loads
         
         // Store event handlers for cleanup
@@ -36,9 +34,7 @@ export default class DashboardPage {
             status: this.filters.status,
             eventSummary: this.filters.eventSummary,
             meetingDay: this.filters.meetingDay,
-            circleType: this.filters.circleType,
-            sortBy: this.sortBy,
-            sortOrder: this.sortOrder
+            circleType: this.filters.circleType
         };
         localStorage.setItem('radiusDashboardFilters', JSON.stringify(filterState));
         console.log('[Dashboard] Filter state saved:', filterState);
@@ -56,8 +52,6 @@ export default class DashboardPage {
                 this.filters.eventSummary = filterState.eventSummary || '';
                 this.filters.meetingDay = filterState.meetingDay || [];
                 this.filters.circleType = filterState.circleType || [];
-                this.sortBy = filterState.sortBy || 'name';
-                this.sortOrder = filterState.sortOrder || 'asc';
                 console.log('[Dashboard] Filter state loaded:', filterState);
             }
         } catch (error) {
@@ -72,8 +66,6 @@ export default class DashboardPage {
                 meetingDay: [],
                 circleType: []
             };
-            this.sortBy = 'name';
-            this.sortOrder = 'asc';
         }
     }
 
@@ -368,7 +360,7 @@ export default class DashboardPage {
                 </div>
                 <div id="filtersPanel" class="${filtersVisible ? '' : 'hidden'}">
                     <div class="p-6">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-8 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
                             <!-- Search -->
                             <div class="sm:col-span-2">
                                 <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
@@ -430,29 +422,6 @@ export default class DashboardPage {
                                     <option value="checked">Checked</option>
                                     <option value="unchecked">Unchecked</option>
                                 </select>
-                            </div>
-
-                            <!-- Sort Options -->
-                            <div>
-                                <label for="sortBy" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sort By</label>
-                                <div class="flex space-x-2">
-                                    <select id="sortBy" 
-                                            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                                        <option value="name">Name</option>
-                                        <option value="type">Circle Type</option>
-                                        <option value="day">Day</option>
-                                        <option value="time">Time</option>
-                                        <option value="frequency">Frequency</option>
-                                        <option value="status">Status</option>
-                                    </select>
-                                    <button id="sortOrderBtn" 
-                                            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 flex items-center justify-center"
-                                            title="Toggle sort order">
-                                        <svg id="sortOrderIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path>
-                                        </svg>
-                                    </button>
-                                </div>
                             </div>
                         </div>
                     </div>
@@ -536,8 +505,6 @@ export default class DashboardPage {
         const meetingDayFilter = document.getElementById('meetingDayFilter');
         const circleTypeFilter = document.getElementById('circleTypeFilter');
         const eventSummaryFilter = document.getElementById('eventSummaryFilter');
-        const sortBySelect = document.getElementById('sortBy');
-        const sortOrderBtn = document.getElementById('sortOrderBtn');
 
         campusFilter?.addEventListener('change', () => {
             this.filters.campus = Array.from(campusFilter.selectedOptions).map(option => option.value);
@@ -571,19 +538,6 @@ export default class DashboardPage {
 
         eventSummaryFilter?.addEventListener('change', () => {
             this.filters.eventSummary = eventSummaryFilter.value;
-            this.applyFilters();
-            this.saveFilterState();
-        });
-
-        sortBySelect?.addEventListener('change', () => {
-            this.sortBy = sortBySelect.value;
-            this.applyFilters();
-            this.saveFilterState();
-        });
-
-        sortOrderBtn?.addEventListener('click', () => {
-            this.sortOrder = this.sortOrder === 'asc' ? 'desc' : 'asc';
-            this.updateSortOrderIcon();
             this.applyFilters();
             this.saveFilterState();
         });
@@ -749,31 +703,31 @@ export default class DashboardPage {
         const circleTypeFilter = document.getElementById('circleTypeFilter');
 
         if (campusFilter) {
-            campusFilter.innerHTML = '<option value="">All</option>' + this.campuses.map(campus => 
+            campusFilter.innerHTML = this.campuses.map(campus => 
                 `<option value="${campus}">${campus}</option>`
             ).join('');
         }
 
         if (acpdFilter) {
-            acpdFilter.innerHTML = '<option value="">All</option>' + this.acpds.map(acpd => 
+            acpdFilter.innerHTML = this.acpds.map(acpd => 
                 `<option value="${acpd}">${acpd}</option>`
             ).join('');
         }
 
         if (statusFilter) {
-            statusFilter.innerHTML = '<option value="">All</option>' + this.statuses.map(status => 
+            statusFilter.innerHTML = this.statuses.map(status => 
                 `<option value="${status}">${status}</option>`
             ).join('');
         }
 
         if (meetingDayFilter) {
-            meetingDayFilter.innerHTML = '<option value="">All</option>' + this.meetingDays.map(day => 
+            meetingDayFilter.innerHTML = this.meetingDays.map(day => 
                 `<option value="${day}">${day}</option>`
             ).join('');
         }
 
         if (circleTypeFilter) {
-            circleTypeFilter.innerHTML = '<option value="">All</option>' + this.circleTypes.map(type => 
+            circleTypeFilter.innerHTML = this.circleTypes.map(type => 
                 `<option value="${type}">${type}</option>`
             ).join('');
         }
@@ -830,28 +784,6 @@ export default class DashboardPage {
         const eventSummaryFilter = document.getElementById('eventSummaryFilter');
         if (eventSummaryFilter) {
             eventSummaryFilter.value = this.filters.eventSummary;
-        }
-
-        // Restore sort options
-        const sortBySelect = document.getElementById('sortBy');
-        if (sortBySelect) {
-            sortBySelect.value = this.sortBy;
-        }
-
-        // Update sort order icon
-        this.updateSortOrderIcon();
-    }
-
-    updateSortOrderIcon() {
-        const sortOrderIcon = document.getElementById('sortOrderIcon');
-        if (sortOrderIcon) {
-            if (this.sortOrder === 'asc') {
-                // Up arrow for ascending
-                sortOrderIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path>';
-            } else {
-                // Down arrow for descending
-                sortOrderIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 13l-5 5m0 0l-5-5m5 5V6"></path>';
-            }
         }
     }
 
@@ -910,42 +842,11 @@ export default class DashboardPage {
             }
         }
 
-        // Sort
+        // Default sort by name
         filtered.sort((a, b) => {
-            // Map sort field names to actual database fields
-            let sortField = this.sortBy;
-            if (sortField === 'type') {
-                sortField = 'circle_type';
-            }
-            
-            let aVal = a[sortField] || '';
-            let bVal = b[sortField] || '';
-            
-            let result;
-            if (this.sortBy === 'name') {
-                result = aVal.localeCompare(bVal);
-            } else if (this.sortBy === 'day') {
-                // Custom sorting for days of the week: Sunday through Saturday
-                const dayOrder = {
-                    'Sunday': 0, 'Sun': 0,
-                    'Monday': 1, 'Mon': 1,
-                    'Tuesday': 2, 'Tue': 2,
-                    'Wednesday': 3, 'Wed': 3,
-                    'Thursday': 4, 'Thu': 4,
-                    'Friday': 5, 'Fri': 5,
-                    'Saturday': 6, 'Sat': 6
-                };
-                
-                const aDay = dayOrder[aVal] !== undefined ? dayOrder[aVal] : 999;
-                const bDay = dayOrder[bVal] !== undefined ? dayOrder[bVal] : 999;
-                
-                result = aDay - bDay;
-            } else {
-                result = aVal.toString().localeCompare(bVal.toString());
-            }
-            
-            // Apply sort order (reverse for descending)
-            return this.sortOrder === 'desc' ? -result : result;
+            const aName = a.name || '';
+            const bName = b.name || '';
+            return aName.localeCompare(bName);
         });
 
         this.filteredLeaders = filtered;
