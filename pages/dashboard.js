@@ -13,7 +13,6 @@ export default class DashboardPage {
             campus: [],
             acpd: [],
             status: [],
-            eventSummary: '',
             meetingDay: [],
             circleType: []
         };
@@ -32,7 +31,6 @@ export default class DashboardPage {
             campus: this.filters.campus,
             acpd: this.filters.acpd,
             status: this.filters.status,
-            eventSummary: this.filters.eventSummary,
             meetingDay: this.filters.meetingDay,
             circleType: this.filters.circleType
         };
@@ -49,7 +47,6 @@ export default class DashboardPage {
                 this.filters.campus = filterState.campus || [];
                 this.filters.acpd = filterState.acpd || [];
                 this.filters.status = filterState.status || [];
-                this.filters.eventSummary = filterState.eventSummary || '';
                 this.filters.meetingDay = filterState.meetingDay || [];
                 this.filters.circleType = filterState.circleType || [];
                 console.log('[Dashboard] Filter state loaded:', filterState);
@@ -62,7 +59,6 @@ export default class DashboardPage {
                 campus: [],
                 acpd: [],
                 status: [],
-                eventSummary: '',
                 meetingDay: [],
                 circleType: []
             };
@@ -78,9 +74,6 @@ export default class DashboardPage {
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                 <!-- Header with Stats -->
                 ${this.renderHeader()}
-
-                <!-- Event Summary Progress (moved to top) -->
-                ${this.renderEventSummaryProgress()}
 
                 <!-- Collapsible Filters Panel -->
                 ${this.renderCollapsibleFilters()}
@@ -249,17 +242,6 @@ export default class DashboardPage {
                         </select>
                     </div>
 
-                    <!-- Event Summary Filter -->
-                    <div>
-                        <label for="eventSummaryFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Summary</label>
-                        <select id="eventSummaryFilter" 
-                                class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500">
-                            <option value="">All</option>
-                            <option value="checked">Checked</option>
-                            <option value="unchecked">Unchecked</option>
-                        </select>
-                    </div>
-
                     <!-- Sort -->
                     <div class="flex space-x-2">
                         <div class="flex-1">
@@ -283,48 +265,6 @@ export default class DashboardPage {
                                 </svg>
                             </button>
                         </div>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    renderEventSummaryProgress() {
-        return `
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
-                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-md flex items-center justify-center mr-3">
-                                <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Event Summary Progress</h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Track monthly connections with Circle Leaders</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="p-6">
-                    <div class="mb-4">
-                        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
-                            <span>Progress</span>
-                            <span id="eventSummaryProgressText">0 / 0 (0%)</span>
-                        </div>
-                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                            <div id="eventSummaryProgressBar" class="bg-green-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
-                        </div>
-                    </div>
-                    <div class="flex flex-wrap gap-2">
-                        <button id="uncheckAllBtn" onclick="window.dashboard?.uncheckAllEventSummaries()"
-                                class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
-                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                            Uncheck All Displayed
-                        </button>
                     </div>
                 </div>
             </div>
@@ -413,16 +353,6 @@ export default class DashboardPage {
                                 </select>
                             </div>
 
-                            <!-- Event Summary Filter -->
-                            <div>
-                                <label for="eventSummaryFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Summary</label>
-                                <select id="eventSummaryFilter" 
-                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500">
-                                    <option value="">All</option>
-                                    <option value="checked">Checked</option>
-                                    <option value="unchecked">Unchecked</option>
-                                </select>
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -504,7 +434,6 @@ export default class DashboardPage {
         const statusFilter = document.getElementById('statusFilter');
         const meetingDayFilter = document.getElementById('meetingDayFilter');
         const circleTypeFilter = document.getElementById('circleTypeFilter');
-        const eventSummaryFilter = document.getElementById('eventSummaryFilter');
 
         campusFilter?.addEventListener('change', () => {
             this.filters.campus = Array.from(campusFilter.selectedOptions).map(option => option.value);
@@ -532,12 +461,6 @@ export default class DashboardPage {
 
         circleTypeFilter?.addEventListener('change', () => {
             this.filters.circleType = Array.from(circleTypeFilter.selectedOptions).map(option => option.value);
-            this.applyFilters();
-            this.saveFilterState();
-        });
-
-        eventSummaryFilter?.addEventListener('change', () => {
-            this.filters.eventSummary = eventSummaryFilter.value;
             this.applyFilters();
             this.saveFilterState();
         });
@@ -571,33 +494,6 @@ export default class DashboardPage {
                 localStorage.setItem('filtersVisible', 'false');
             }
         }
-    }
-
-    async handleEventSummaryChange(leaderId, isChecked) {
-        console.log('[Dashboard] Event summary checkbox changed:', { leaderId, isChecked });
-        
-        // Update UI optimistically first
-        const leader = this.circleLeaders.find(l => l.id === leaderId);
-        const filteredLeader = this.filteredLeaders.find(l => l.id === leaderId);
-        
-        console.log('[Dashboard] Found leader in circleLeaders:', !!leader);
-        console.log('[Dashboard] Found leader in filteredLeaders:', !!filteredLeader);
-        console.log('[Dashboard] Leader before update:', leader ? { id: leader.id, name: leader.name, event_summary_received: leader.event_summary_received } : 'not found');
-        
-        if (leader) {
-            leader.event_summary_received = isChecked;
-            console.log('[Dashboard] Leader after update:', { id: leader.id, name: leader.name, event_summary_received: leader.event_summary_received });
-        }
-        if (filteredLeader) {
-            filteredLeader.event_summary_received = isChecked;
-        }
-        
-        // Update progress bar immediately
-        console.log('[Dashboard] Calling updateEventSummaryProgress...');
-        this.updateEventSummaryProgress();
-        
-        // Then update the database
-        await this.updateEventSummaryStatus(leaderId, isChecked);
     }
 
     async loadData() {
@@ -783,11 +679,6 @@ export default class DashboardPage {
             });
         }
 
-        // Restore event summary filter
-        const eventSummaryFilter = document.getElementById('eventSummaryFilter');
-        if (eventSummaryFilter) {
-            eventSummaryFilter.value = this.filters.eventSummary;
-        }
     }
 
     applyFilters() {
@@ -836,15 +727,6 @@ export default class DashboardPage {
             );
         }
 
-        // Event Summary filter
-        if (this.filters.eventSummary) {
-            if (this.filters.eventSummary === 'checked') {
-                filtered = filtered.filter(leader => leader.event_summary_received === true);
-            } else if (this.filters.eventSummary === 'unchecked') {
-                filtered = filtered.filter(leader => leader.event_summary_received !== true);
-            }
-        }
-
         // Default sort by name
         filtered.sort((a, b) => {
             const aName = a.name || '';
@@ -854,7 +736,6 @@ export default class DashboardPage {
 
         this.filteredLeaders = filtered;
         this.renderCircleLeaders();
-        this.updateEventSummaryProgress();
         this.updateTodayCirclesTable();
         
         // Ensure global reference is maintained
@@ -915,20 +796,6 @@ export default class DashboardPage {
                             ${leader.status || 'Unknown'}
                         </span>
                     </div>
-
-                    <!-- Event Summary Checkbox -->
-                    ${isAdmin ? `
-                        <div class="mb-4 flex items-center">
-                            <input type="checkbox" 
-                                   id="event-summary-${leader.id}" 
-                                   ${leader.event_summary_received ? 'checked' : ''} 
-                                   onchange="window.dashboard.handleEventSummaryChange('${leader.id}', this.checked)"
-                                   class="w-4 h-4 text-primary-600 bg-gray-100 border-gray-300 rounded focus:ring-primary-500 dark:focus:ring-primary-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-700 dark:border-gray-600">
-                            <label for="event-summary-${leader.id}" class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">
-                                Event Summary Received
-                            </label>
-                        </div>
-                    ` : ''}
 
                     <!-- Contact Information -->
                     ${leader.email || leader.phone ? `
@@ -991,133 +858,6 @@ export default class DashboardPage {
                 </div>
             </div>
         `;
-    }
-
-    async updateEventSummaryStatus(leaderId, isChecked) {
-        console.log('[Dashboard] Updating event summary for leader:', leaderId, 'to:', isChecked);
-
-        try {
-            const { data, error } = await supabase
-                .from('circle_leaders')
-                .update({ 
-                    event_summary_received: isChecked,
-                    updated_at: new Date().toISOString()
-                })
-                .eq('id', leaderId)
-                .select();
-
-            if (error) {
-                console.error('[Dashboard] Error updating event summary:', error);
-                throw error;
-            }
-
-            console.log('[Dashboard] Event summary updated successfully:', data);
-
-            window.utils.showNotification(
-                `Event Summary ${isChecked ? 'marked as received' : 'unmarked'}`, 
-                'success'
-            );
-        } catch (error) {
-            console.error('[Dashboard] Error updating event summary:', error);
-            window.utils.showNotification('Error updating event summary', 'error');
-            
-            // Revert the local data and checkbox state on error
-            const leader = this.circleLeaders.find(l => l.id === leaderId);
-            const filteredLeader = this.filteredLeaders.find(l => l.id === leaderId);
-            
-            if (leader) {
-                leader.event_summary_received = !isChecked;
-            }
-            if (filteredLeader) {
-                filteredLeader.event_summary_received = !isChecked;
-            }
-            
-            // Revert the checkbox
-            const checkbox = document.getElementById(`event-summary-${leaderId}`);
-            if (checkbox) {
-                checkbox.checked = !isChecked;
-            }
-            
-            // Update progress bar to reflect reverted state
-            this.updateEventSummaryProgress();
-        }
-    }
-
-    async uncheckAllEventSummaries() {
-        const filteredCount = this.filteredLeaders.length;
-        const checkedCount = this.filteredLeaders.filter(l => l.event_summary_received).length;
-
-        if (checkedCount === 0) {
-            window.utils.showNotification('No Event Summaries to uncheck in current view', 'info');
-            return;
-        }
-
-        const confirmMessage = `This will uncheck Event Summary for ${checkedCount} Circle Leader${checkedCount !== 1 ? 's' : ''} in the current filtered view. Continue?`;
-        
-        if (!confirm(confirmMessage)) {
-            return;
-        }
-
-        try {
-            const filteredIds = this.filteredLeaders.map(l => l.id);
-            
-            const { error } = await supabase
-                .from('circle_leaders')
-                .update({ event_summary_received: false })
-                .in('id', filteredIds);
-
-            if (error) throw error;
-
-            // Update our local data
-            this.circleLeaders.forEach(leader => {
-                if (filteredIds.includes(leader.id)) {
-                    leader.event_summary_received = false;
-                }
-            });
-
-            // Re-render the grid to update checkboxes
-            this.renderCircleLeaders();
-            
-            // Update the progress display
-            this.updateEventSummaryProgress();
-
-            window.utils.showNotification(
-                `Event Summary unchecked for ${checkedCount} Circle Leader${checkedCount !== 1 ? 's' : ''}`, 
-                'success'
-            );
-        } catch (error) {
-            console.error('Error unchecking event summaries:', error);
-            window.utils.showNotification('Error unchecking event summaries', 'error');
-        }
-    }
-
-    updateEventSummaryProgress() {
-        console.log('[Dashboard] updateEventSummaryProgress called');
-        const progressBar = document.getElementById('eventSummaryProgressBar');
-        const progressText = document.getElementById('eventSummaryProgressText');
-        
-        if (!progressBar || !progressText) {
-            console.warn('[Dashboard] Progress bar elements not found - progressBar:', !!progressBar, 'progressText:', !!progressText);
-            return;
-        }
-
-        // Use all circle leaders for progress calculation, not just filtered ones
-        const total = this.circleLeaders.length;
-        const completed = this.circleLeaders.filter(l => l.event_summary_received).length;
-        const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
-
-        console.log('[Dashboard] Progress update:', { 
-            total, 
-            completed, 
-            percentage,
-            circleLeadersLength: this.circleLeaders.length,
-            sampleLeaders: this.circleLeaders.slice(0, 3).map(l => ({ id: l.id, name: l.name, event_summary_received: l.event_summary_received }))
-        });
-
-        progressBar.style.width = `${percentage}%`;
-        progressText.textContent = `${completed} of ${total} received`;
-        
-        console.log('[Dashboard] Progress bar updated - width:', progressBar.style.width, 'text:', progressText.textContent);
     }
 
     async updateStats() {
