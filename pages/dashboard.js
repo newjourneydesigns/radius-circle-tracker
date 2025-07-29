@@ -77,8 +77,14 @@ export default class DashboardPage {
                 <!-- Header with Stats -->
                 ${this.renderHeader()}
 
-                <!-- Filters and Search -->
-                ${this.renderFilters()}
+                <!-- Event Summary Progress (moved to top) -->
+                ${this.renderEventSummaryProgress()}
+
+                <!-- Collapsible Filters Panel -->
+                ${this.renderCollapsibleFilters()}
+
+                <!-- Today's Circles Table -->
+                ${this.renderTodayCircles()}
 
                 <!-- Circle Leaders Grid -->
                 <div id="circleLeadersGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -181,55 +187,6 @@ export default class DashboardPage {
                 <div class="flex justify-between items-center mb-4">
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h2>
                 </div>
-                
-                <!-- Event Summary Progress Bar -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                        <!-- Progress Information -->
-                        <div class="flex items-center space-x-4">
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Event Summary Progress</h3>
-                            <div class="flex items-center space-x-2">
-                                <div class="bg-gray-200 dark:bg-gray-700 rounded-full h-3 w-32">
-                                    <div id="eventSummaryProgressBar" class="bg-green-500 h-3 rounded-full transition-all duration-300" style="width: 0%"></div>
-                                </div>
-                                <span id="eventSummaryProgressText" class="text-sm font-medium text-gray-900 dark:text-white">0 of 0 received</span>
-                            </div>
-                        </div>
-                        
-                        <!-- Uncheck All Button -->
-                        <button id="uncheckAllBtn" onclick="window.dashboard.uncheckAllEventSummaries()"
-                                class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
-                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                            </svg>
-                            Uncheck All Displayed
-                        </button>
-                    </div>
-                </div>
-
-                </div>
-
-                <!-- Today's Circles Table -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
-                    <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-                        <div class="flex items-center">
-                            <div class="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-md flex items-center justify-center mr-3">
-                                <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
-                                </svg>
-                            </div>
-                            <div>
-                                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Today's Circles</h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Circle Leaders meeting today</p>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="overflow-x-auto">
-                        <div id="todayCirclesTable" class="min-w-full">
-                            <!-- Table content will be populated dynamically -->
-                        </div>
-                    </div>
-                </div>
             </div>
         `;
     }
@@ -312,6 +269,184 @@ export default class DashboardPage {
         `;
     }
 
+    renderEventSummaryProgress() {
+        return `
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-green-100 dark:bg-green-900 rounded-md flex items-center justify-center mr-3">
+                                <svg class="w-5 h-5 text-green-600 dark:text-green-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Event Summary Progress</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Track monthly connections with Circle Leaders</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="p-6">
+                    <div class="mb-4">
+                        <div class="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                            <span>Progress</span>
+                            <span id="eventSummaryProgressText">0 / 0 (0%)</span>
+                        </div>
+                        <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div id="eventSummaryProgressBar" class="bg-green-600 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap gap-2">
+                        <button id="checkAllBtn" onclick="window.dashboard.checkAllEventSummaries()"
+                                class="bg-green-600 text-white px-4 py-2 rounded-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 text-sm">
+                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                            </svg>
+                            Check All Displayed
+                        </button>
+                        <button id="uncheckAllBtn" onclick="window.dashboard.uncheckAllEventSummaries()"
+                                class="bg-orange-600 text-white px-4 py-2 rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500 text-sm">
+                            <svg class="w-4 h-4 mr-2 inline" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                            </svg>
+                            Uncheck All Displayed
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderCollapsibleFilters() {
+        const filtersVisible = localStorage.getItem('filtersVisible') !== 'false'; // Default to true
+        
+        return `
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-blue-100 dark:bg-blue-900 rounded-md flex items-center justify-center mr-3">
+                                <svg class="w-5 h-5 text-blue-600 dark:text-blue-400" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L12 11.414V15a1 1 0 01-.293.707l-2 2A1 1 0 018 17v-5.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd"></path>
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-medium text-gray-900 dark:text-white">Filters & Search</h3>
+                                <p class="text-sm text-gray-500 dark:text-gray-400">Filter and sort Circle Leaders</p>
+                            </div>
+                        </div>
+                        <button id="toggleFiltersBtn" onclick="window.dashboard.toggleFilters()"
+                                class="flex items-center px-3 py-2 text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 focus:outline-none">
+                            <span id="toggleFiltersText">${filtersVisible ? 'Hide Filters' : 'Edit Filters'}</span>
+                            <svg id="toggleFiltersIcon" class="w-4 h-4 ml-2 transform transition-transform ${filtersVisible ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+                <div id="filtersPanel" class="${filtersVisible ? '' : 'hidden'}">
+                    <div class="p-6">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                            <!-- Search -->
+                            <div class="sm:col-span-2">
+                                <label for="search" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Search</label>
+                                <input type="text" id="search" placeholder="Search by name..." 
+                                       class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+
+                            <!-- Campus Filter -->
+                            <div>
+                                <label for="campusFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Campus</label>
+                                <select id="campusFilter" multiple 
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+
+                            <!-- ACPD Filter -->
+                            <div>
+                                <label for="acpdFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">ACPD</label>
+                                <select id="acpdFilter" multiple 
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+
+                            <!-- Status Filter -->
+                            <div>
+                                <label for="statusFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Status</label>
+                                <select id="statusFilter" multiple 
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <!-- Options will be populated dynamically -->
+                                </select>
+                            </div>
+
+                            <!-- Event Summary Filter -->
+                            <div>
+                                <label for="eventSummaryFilter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Event Summary</label>
+                                <select id="eventSummaryFilter" 
+                                        class="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                    <option value="">All</option>
+                                    <option value="checked">Checked</option>
+                                    <option value="unchecked">Unchecked</option>
+                                </select>
+                            </div>
+
+                            <!-- Sort Options -->
+                            <div class="sm:col-span-2 lg:col-span-1">
+                                <label for="sortBy" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Sort By</label>
+                                <div class="flex space-x-2">
+                                    <select id="sortBy" 
+                                            class="flex-1 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                                        <option value="name">Name</option>
+                                        <option value="type">Circle Type</option>
+                                        <option value="day">Day</option>
+                                        <option value="time">Time</option>
+                                        <option value="frequency">Frequency</option>
+                                        <option value="status">Status</option>
+                                    </select>
+                                    <button id="sortOrderBtn" 
+                                            class="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 flex items-center justify-center"
+                                            title="Toggle sort order">
+                                        <svg id="sortOrderIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 11l5-5m0 0l5 5m-5-5v12"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    renderTodayCircles() {
+        return `
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow mb-6">
+                <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="flex items-center">
+                        <div class="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-md flex items-center justify-center mr-3">
+                            <svg class="w-5 h-5 text-purple-600 dark:text-purple-400" fill="currentColor" viewBox="0 0 20 20">
+                                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd"></path>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-medium text-gray-900 dark:text-white">Today's Circles</h3>
+                            <p class="text-sm text-gray-500 dark:text-gray-400">Circle Leaders meeting today</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <div id="todayCirclesTable" class="min-w-full">
+                        <!-- Table content will be populated dynamically -->
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
     async init() {
         // Set up global reference for onclick handlers
         window.dashboard = this;
@@ -339,6 +474,12 @@ export default class DashboardPage {
             if (!menuButton?.contains(e.target) && !menuDropdown?.contains(e.target)) {
                 menuDropdown?.classList.add('hidden');
             }
+        });
+
+        // Filter toggle button
+        const toggleFiltersBtn = document.getElementById('toggleFiltersBtn');
+        toggleFiltersBtn?.addEventListener('click', () => {
+            this.toggleFilters();
         });
 
         // Search with debounce
@@ -401,9 +542,28 @@ export default class DashboardPage {
                 this.closePhoneModal();
             }
         });
+    }
 
-        // Remove the event delegation approach since we're using inline handlers
-        // Event summary checkbox handler is now handled via inline onchange
+    toggleFilters() {
+        const filtersPanel = document.getElementById('filtersPanel');
+        const toggleFiltersText = document.getElementById('toggleFiltersText');
+        const toggleFiltersIcon = document.getElementById('toggleFiltersIcon');
+        
+        if (filtersPanel && toggleFiltersText && toggleFiltersIcon) {
+            const isHidden = filtersPanel.classList.contains('hidden');
+            
+            if (isHidden) {
+                filtersPanel.classList.remove('hidden');
+                toggleFiltersText.textContent = 'Hide Filters';
+                toggleFiltersIcon.classList.add('rotate-180');
+                localStorage.setItem('filtersVisible', 'true');
+            } else {
+                filtersPanel.classList.add('hidden');
+                toggleFiltersText.textContent = 'Edit Filters';
+                toggleFiltersIcon.classList.remove('rotate-180');
+                localStorage.setItem('filtersVisible', 'false');
+            }
+        }
     }
 
     async handleEventSummaryChange(leaderId, isChecked) {
