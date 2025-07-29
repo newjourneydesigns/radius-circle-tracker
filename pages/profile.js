@@ -87,6 +87,12 @@ export default class ProfilePage {
 
         const isAdmin = window.authManager.isAdmin();
         const statusColors = {
+            'invited': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
+            'pipeline': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
+            'active': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
+            'paused': 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300',
+            'off-boarding': 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300',
+            // Legacy support for old capitalized values
             'Invited': 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300',
             'In Training': 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300',
             'Active': 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300',
@@ -99,8 +105,8 @@ export default class ProfilePage {
                 <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
                     <div>
                         <h2 class="text-2xl font-bold text-gray-900 dark:text-white">${this.leader.name}</h2>
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${statusColors[this.leader.status] || statusColors['Paused']}">
-                            ${this.leader.status || 'Unknown'}
+                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-sm font-medium ${statusColors[this.leader.status] || statusColors['paused']}">
+                            ${this.leader.status ? this.leader.status.charAt(0).toUpperCase() + this.leader.status.slice(1) : 'Unknown'}
                         </span>
                     </div>
                     <div class="flex space-x-3">

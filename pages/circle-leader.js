@@ -124,6 +124,22 @@ export default class CircleLeaderPage {
                                     </select>
                                 </div>
 
+                                <!-- Status -->
+                                <div>
+                                    <label for="status" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
+                                        Status *
+                                    </label>
+                                    <select id="status" name="status" required
+                                            class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500">
+                                        <option value="">Select status</option>
+                                        <option value="invited">Invited</option>
+                                        <option value="pipeline">Pipeline</option>
+                                        <option value="active">Active</option>
+                                        <option value="paused">Paused</option>
+                                        <option value="off-boarding">Off-boarding</option>
+                                    </select>
+                                </div>
+
                                 <!-- Meeting Day -->
                                 <div>
                                     <label for="meeting_day" class="block text-sm font-medium text-gray-700 dark:text-gray-300">
@@ -371,6 +387,7 @@ export default class CircleLeaderPage {
             'campus': 'campus',                // Form ID: campus, DB field: campus
             'acpd': 'acpd',                   // Form ID: acpd, DB field: acpd
             'circle_type': 'circle_type',     // Form ID: circle_type, DB field: circle_type
+            'status': 'status',               // Form ID: status, DB field: status
             'meeting_day': 'day',             // Form ID: meeting_day, DB field: day
             'meeting_time': 'time',           // Form ID: meeting_time, DB field: time
             'frequency': 'frequency',         // Form ID: frequency, DB field: frequency
@@ -441,7 +458,7 @@ export default class CircleLeaderPage {
         for (let [key, value] of Object.entries(validFields)) {
             if (value !== null && value !== undefined) {
                 // For required fields, don't save empty strings
-                if (['name', 'email', 'campus', 'acpd'].includes(key) && value === '') {
+                if (['name', 'email', 'campus', 'acpd', 'status'].includes(key) && value === '') {
                     continue; // Skip empty required fields
                 }
                 // For optional fields, save even if empty string
