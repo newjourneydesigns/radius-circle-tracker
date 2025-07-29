@@ -132,11 +132,10 @@ export default class CircleLeaderPage {
                                     <select id="status" name="status" required
                                             class="mt-1 block w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-primary-500 focus:border-primary-500">
                                         <option value="">Select status</option>
-                                        <option value="invited">Invited</option>
-                                        <option value="pipeline">Pipeline</option>
-                                        <option value="active">Active</option>
-                                        <option value="paused">Paused</option>
-                                        <option value="off-boarding">Off-boarding</option>
+                                        <option value="Invited">Invited</option>
+                                        <option value="In Training">In Training</option>
+                                        <option value="Active">Active</option>
+                                        <option value="Paused">Paused</option>
                                     </select>
                                 </div>
 
@@ -450,7 +449,8 @@ export default class CircleLeaderPage {
             'time': this.convertTo12HourFormat(allData.meeting_time), // Convert to AM/PM format
             'frequency': allData.frequency,    // Frequency dropdown
             'ccb_profile_link': allData.ccb_profile_link, // CCB Profile Link
-            'status': allData.status || 'invited' // Default status to invited
+            // Default status should match database values
+            'status': allData.status || 'Invited'
         };
 
         // Filter out null/undefined values but keep empty strings for optional fields
