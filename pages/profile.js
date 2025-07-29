@@ -475,15 +475,28 @@ export default class ProfilePage {
 
     async editEntry(entryId, entryType) {
         try {
+            console.log('Edit entry called with:', { entryId, entryType });
+            console.log('Available notes:', this.notes);
+            console.log('Available communications:', this.communications);
+            
             // Find the entry in our data
             let entry;
             if (entryType === 'note') {
-                entry = this.notes.find(note => note.id === entryId);
+                entry = this.notes.find(note => {
+                    console.log('Comparing note ID:', note.id, 'with entryId:', entryId, 'Equal?', note.id === entryId);
+                    return note.id === entryId;
+                });
             } else {
-                entry = this.communications.find(comm => comm.id === entryId);
+                entry = this.communications.find(comm => {
+                    console.log('Comparing comm ID:', comm.id, 'with entryId:', entryId, 'Equal?', comm.id === entryId);
+                    return comm.id === entryId;
+                });
             }
 
+            console.log('Found entry:', entry);
+
             if (!entry) {
+                console.error('Entry not found for ID:', entryId, 'Type:', entryType);
                 window.utils.showNotification('Entry not found', 'error');
                 return;
             }
