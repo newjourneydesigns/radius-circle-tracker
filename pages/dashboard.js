@@ -582,15 +582,18 @@ export default class DashboardPage {
         
         console.log('[Dashboard] Found leader in circleLeaders:', !!leader);
         console.log('[Dashboard] Found leader in filteredLeaders:', !!filteredLeader);
+        console.log('[Dashboard] Leader before update:', leader ? { id: leader.id, name: leader.name, event_summary_received: leader.event_summary_received } : 'not found');
         
         if (leader) {
             leader.event_summary_received = isChecked;
+            console.log('[Dashboard] Leader after update:', { id: leader.id, name: leader.name, event_summary_received: leader.event_summary_received });
         }
         if (filteredLeader) {
             filteredLeader.event_summary_received = isChecked;
         }
         
         // Update progress bar immediately
+        console.log('[Dashboard] Calling updateEventSummaryProgress...');
         this.updateEventSummaryProgress();
         
         // Then update the database
@@ -1089,22 +1092,32 @@ export default class DashboardPage {
     }
 
     updateEventSummaryProgress() {
+        console.log('[Dashboard] updateEventSummaryProgress called');
         const progressBar = document.getElementById('eventSummaryProgressBar');
         const progressText = document.getElementById('eventSummaryProgressText');
         
         if (!progressBar || !progressText) {
-            console.warn('[Dashboard] Progress bar elements not found');
+            console.warn('[Dashboard] Progress bar elements not found - progressBar:', !!progressBar, 'progressText:', !!progressText);
             return;
         }
 
-        const total = this.filteredLeaders.length;
-        const completed = this.filteredLeaders.filter(l => l.event_summary_received).length;
+        // Use all circle leaders for progress calculation, not just filtered ones
+        const total = this.circleLeaders.length;
+        const completed = this.circleLeaders.filter(l => l.event_summary_received).length;
         const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
 
-        console.log('[Dashboard] Progress update:', { total, completed, percentage });
+        console.log('[Dashboard] Progress update:', { 
+            total, 
+            completed, 
+            percentage,
+            circleLeadersLength: this.circleLeaders.length,
+            sampleLeaders: this.circleLeaders.slice(0, 3).map(l => ({ id: l.id, name: l.name, event_summary_received: l.event_summary_received }))
+        });
 
         progressBar.style.width = `${percentage}%`;
         progressText.textContent = `${completed} of ${total} received`;
+        
+        console.log('[Dashboard] Progress bar updated - width:', progressBar.style.width, 'text:', progressText.textContent);
     }
 
     async updateStats() {
