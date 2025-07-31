@@ -1356,7 +1356,23 @@ export default class DashboardPage {
                 return;
             }
 
-            // Update in database
+            // Grab current state in case we need to revert
+            const leader = this.circleLeaders.find(l => l.id === leaderId);
+            const filteredLeader = this.filteredLeaders.find(l => l.id === leaderId);
+            const previousValue = leader ? leader.event_summary_received : false;
+
+            // Optimistically update local data
+            if (leader) {
+                leader.event_summary_received = isChecked;
+            }
+            if (filteredLeader) {
+                filteredLeader.event_summary_received = isChecked;
+            }
+
+            // Update progress immediately for responsive UI
+            this.updateEventSummaryProgress();
+
+            // Persist change in database
             const { error } = await supabase
                 .from('circle_leaders')
                 .update({ event_summary_received: isChecked })
@@ -1365,30 +1381,23 @@ export default class DashboardPage {
             if (error) {
                 console.error('[Dashboard] Error updating event summary:', error);
                 window.utils?.showNotification('Failed to update event summary', 'error');
-                
-                // Revert checkbox state
+
+                // Revert checkbox state and local data
                 const checkbox = document.getElementById(`eventSummary_${leaderId}`);
                 if (checkbox) {
-                    checkbox.checked = !isChecked;
+                    checkbox.checked = previousValue;
                 }
+                if (leader) {
+                    leader.event_summary_received = previousValue;
+                }
+                if (filteredLeader) {
+                    filteredLeader.event_summary_received = previousValue;
+                }
+                this.updateEventSummaryProgress();
                 return;
             }
 
-            // Update local data
-            const leader = this.circleLeaders.find(l => l.id === leaderId);
-            if (leader) {
-                leader.event_summary_received = isChecked;
-                console.log('[Dashboard] Updated main leader data:', leader.name, isChecked);
-            }
-
-            // Update filtered data if leader is currently visible
-            const filteredLeader = this.filteredLeaders.find(l => l.id === leaderId);
-            if (filteredLeader) {
-                filteredLeader.event_summary_received = isChecked;
-                console.log('[Dashboard] Updated filtered leader data:', filteredLeader.name, isChecked);
-            }
-
-            // Use setTimeout to ensure DOM is updated before progress calculation
+            // Ensure progress reflects the final state
             setTimeout(() => {
                 this.refreshEventSummaryProgress();
             }, 0);
